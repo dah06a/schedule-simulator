@@ -58,6 +58,18 @@ const creditRequirements = {
 	government: 1,
 	elective: 5,
 };
+const orderedCredits = [
+	"akHistory",
+	"government",
+	"health",
+	"vocEd",
+	"english",
+	"math",
+	"science",
+	"social",
+	"physical",
+	"elective",
+];
 
 const scheduleCourses = [
 	// ENGLISH
@@ -68,6 +80,7 @@ const scheduleCourses = [
 		period: 1,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -75,7 +88,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "English III",
@@ -84,6 +97,7 @@ const scheduleCourses = [
 		period: 2,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -91,7 +105,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "English II",
@@ -100,6 +114,7 @@ const scheduleCourses = [
 		period: 3,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -107,7 +122,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "English I",
@@ -116,6 +131,7 @@ const scheduleCourses = [
 		period: 4,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -123,7 +139,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "English II",
@@ -132,6 +148,7 @@ const scheduleCourses = [
 		period: 5,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -139,7 +156,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "English IV",
@@ -148,6 +165,7 @@ const scheduleCourses = [
 		period: 6,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -155,7 +173,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 
 	// MATH
@@ -166,6 +184,7 @@ const scheduleCourses = [
 		period: 1,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -173,7 +192,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "PreCalc/Calc",
@@ -182,6 +201,7 @@ const scheduleCourses = [
 		period: 2,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -189,7 +209,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Geometry",
@@ -198,6 +218,7 @@ const scheduleCourses = [
 		period: 3,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -205,7 +226,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Algebra I",
@@ -214,6 +235,7 @@ const scheduleCourses = [
 		period: 4,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -221,7 +243,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Algebra II",
@@ -230,6 +252,7 @@ const scheduleCourses = [
 		period: 5,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -237,7 +260,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Pre-Algebra",
@@ -246,6 +269,7 @@ const scheduleCourses = [
 		period: 6,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -253,7 +277,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 
 	// SCIENCE
@@ -264,6 +288,7 @@ const scheduleCourses = [
 		period: 1,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -271,7 +296,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Science III",
@@ -280,6 +305,7 @@ const scheduleCourses = [
 		period: 2,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -287,7 +313,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Science I",
@@ -296,6 +322,7 @@ const scheduleCourses = [
 		period: 3,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -303,7 +330,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Science I",
@@ -312,6 +339,7 @@ const scheduleCourses = [
 		period: 4,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -319,7 +347,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Science III",
@@ -328,6 +356,7 @@ const scheduleCourses = [
 		period: 5,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -335,7 +364,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Science II",
@@ -344,6 +373,7 @@ const scheduleCourses = [
 		period: 6,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -351,7 +381,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 
 	// SOCIAL STUDIES
@@ -362,6 +392,7 @@ const scheduleCourses = [
 		period: 1,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -369,7 +400,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Alaska History",
@@ -378,6 +409,7 @@ const scheduleCourses = [
 		period: 2,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -385,7 +417,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Government",
@@ -394,6 +426,7 @@ const scheduleCourses = [
 		period: 3,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -401,7 +434,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Government",
@@ -410,6 +443,7 @@ const scheduleCourses = [
 		period: 4,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -417,7 +451,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Alaska History",
@@ -426,6 +460,7 @@ const scheduleCourses = [
 		period: 5,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -433,7 +468,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "World History",
@@ -442,6 +477,7 @@ const scheduleCourses = [
 		period: 6,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -449,7 +485,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 
 	// LAB CLASSES
@@ -460,6 +496,7 @@ const scheduleCourses = [
 		period: 1,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 15,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -467,7 +504,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "US History",
@@ -476,6 +513,7 @@ const scheduleCourses = [
 		period: 3,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -483,7 +521,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "English Lab",
@@ -492,6 +530,7 @@ const scheduleCourses = [
 		period: 4,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 15,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -499,7 +538,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Math Lab",
@@ -508,6 +547,7 @@ const scheduleCourses = [
 		period: 5,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 15,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -515,7 +555,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 
 	// PE
@@ -526,6 +566,7 @@ const scheduleCourses = [
 		period: 1,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -533,7 +574,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "High School PE",
@@ -542,6 +583,7 @@ const scheduleCourses = [
 		period: 2,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -549,7 +591,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "High School PE",
@@ -558,6 +600,7 @@ const scheduleCourses = [
 		period: 4,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -565,7 +608,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 
 	// MATH/SCIENCE/HEALTH
@@ -576,6 +619,7 @@ const scheduleCourses = [
 		period: 1,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -583,7 +627,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Health",
@@ -592,6 +636,7 @@ const scheduleCourses = [
 		period: 2,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -599,7 +644,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Geometry",
@@ -608,6 +653,7 @@ const scheduleCourses = [
 		period: 3,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -615,7 +661,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Health",
@@ -624,6 +670,7 @@ const scheduleCourses = [
 		period: 4,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: false,
 		students: [],
 		requirements: {
@@ -631,7 +678,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Science Elective",
@@ -640,6 +687,7 @@ const scheduleCourses = [
 		period: 6,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -647,7 +695,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 
 	// ELECTIVES
@@ -658,6 +706,7 @@ const scheduleCourses = [
 		period: 1,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 15,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -665,7 +714,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Welding",
@@ -674,6 +723,7 @@ const scheduleCourses = [
 		period: 2,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 15,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -681,7 +731,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Welding",
@@ -690,6 +740,7 @@ const scheduleCourses = [
 		period: 3,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 15,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -697,7 +748,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Welding",
@@ -706,6 +757,7 @@ const scheduleCourses = [
 		period: 4,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 15,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -713,7 +765,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Welding",
@@ -722,6 +774,7 @@ const scheduleCourses = [
 		period: 5,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 15,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -729,7 +782,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Welding",
@@ -738,6 +791,7 @@ const scheduleCourses = [
 		period: 6,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 15,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -745,7 +799,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Carpentry",
@@ -754,6 +808,7 @@ const scheduleCourses = [
 		period: 4,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 15,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -761,7 +816,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Carpentry",
@@ -770,6 +825,7 @@ const scheduleCourses = [
 		period: 5,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 15,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -777,7 +833,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Carpentry",
@@ -786,6 +842,7 @@ const scheduleCourses = [
 		period: 6,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 15,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -793,7 +850,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Choir",
@@ -802,6 +859,7 @@ const scheduleCourses = [
 		period: 1,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -809,7 +867,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Guitar",
@@ -818,6 +876,7 @@ const scheduleCourses = [
 		period: 4,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -825,7 +884,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "World Drumming",
@@ -834,6 +893,7 @@ const scheduleCourses = [
 		period: 3,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -841,7 +901,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 	{
 		title: "Band",
@@ -850,6 +910,7 @@ const scheduleCourses = [
 		period: 4,
 		passRate: 0.9,
 		passCount: 0,
+		maxSize: 32,
 		isRepeatable: true,
 		students: [],
 		requirements: {
@@ -857,7 +918,7 @@ const scheduleCourses = [
 			grade: null,
 		},
 		classSize: 0,
-		popularity: 0.5,
+		popularity: 1,
 	},
 ];
 
@@ -867,8 +928,8 @@ const exampleStudents = [
 		name: "Alice",
 		grade: 9,
 		proficiency: Math.round(Math.random() * (100 - 50) + 50),
-		isGraduated: false,
-		isDropout: false,
+		didGraduate: false,
+		didDropout: false,
 		credits: {
 			english: 0,
 			math: 0,
@@ -1120,8 +1181,8 @@ function generateStudent() {
 		name: generateName(),
 		grade: 9,
 		proficiency: Math.round(Math.random() * (100 - 50) + 50),
-		isGraduated: false,
-		isDropout: false,
+		didGraduate: false,
+		didDropout: false,
 		credits: {
 			english: 0,
 			math: 0,
@@ -1143,7 +1204,7 @@ function generateStudent() {
 	};
 }
 
-function createStudents(numOfStudents = 100) {
+function createStudents(numOfStudents = 25) {
 	const students = [];
 	for (let i = 0; i < numOfStudents; i++) {
 		const newStudent = generateStudent();
@@ -1152,12 +1213,12 @@ function createStudents(numOfStudents = 100) {
 	return students;
 }
 
-function getAllActivePrevStudents() {
+function getAllActiveStudents() {
 	const activeStudents = [];
 	for (const year of allYearsReport) {
 		if (year.students) {
 			for (const student of year.students) {
-				if (!student.isGraduated && !student.isDropout) {
+				if (!student.didGraduate && !student.didDropout) {
 					activeStudents.push(student);
 				}
 			}
@@ -1166,51 +1227,72 @@ function getAllActivePrevStudents() {
 	return activeStudents;
 }
 
-function getPassedCoursesIds(student) {
+function getStudentsByGrade(allStudents, grade) {
+	return allStudents.filter((student) => student.grade === grade);
+}
+
+function getCourseHistoryMap(student) {
 	const allPassedCourses = [];
 	for (const year of Object.values(student.courseHistory)) {
-		for (const semester of year) {
-			for (const course of semester) {
+		for (const quarter of year) {
+			for (const course of quarter) {
 				if (course.didPass) {
-					allPassedCourses.push(course.id);
+					allPassedCourses.push(course.title);
 				}
 			}
 		}
 	}
-	return allPassedCourses;
+
+	const courseHistoryMap = {};
+	for (const course of allPassedCourses) {
+		if (!courseHistoryMap[course]) {
+			courseHistoryMap[course] = 0.25;
+		} else {
+			courseHistoryMap += 0.25;
+		}
+	}
+
+	return courseHistoryMap;
 }
 
-function getAvailableCourses(
-	courseHistoryIds,
+function getAvailableCoursesByCredit(
+	courseHistoryMap,
 	studentGrade,
-	semester,
-	curCourses
+	curSchedule,
+	curYearCourses,
+	creditType
 ) {
-	const underMaxClassSize = [
-		...curCourses.filter((course) => course.students.length < maxClassSize),
-	];
-	const inCurSemester = underMaxClassSize.filter(
-		(course) => course.semester === semester
-	);
-	const newOrRepeatable = inCurSemester.filter(
-		(course) => course.repeatable || !courseHistoryIds.includes(course.id)
-	);
-	return newOrRepeatable.filter((course) => {
-		if (!course.requirements.grade && !course.requirements.courses) {
-			return true;
-		}
+	return curYearCourses.filter((course) => {
+		const matchesCreditType = course.creditType === creditType;
+		const courseIsNotFull = course.students.length < course.maxSize;
+		const notAlreadyInSchedule = !curSchedule.includes(course.title);
+		const isNewOrRepeatable =
+			course.isRepeatable ||
+			!courseHistoryMap[course] ||
+			courseHistoryMap[course] <= 0.75;
 
 		let meetsGradeRequirements = true;
 		let meetsCourseRequirements = true;
 		if (course.requirements.grade) {
-			meetsGradeRequirement = studentGrade >= course.requirements.grade;
+			meetsGradeRequirements = studentGrade >= course.requirements.grade;
 		}
 		if (course.requirements.courses) {
-			meetsCourseRequirements = course.requirements.courses.every((courseId) =>
-				courseHistoryIds.includes(courseId)
+			meetsCourseRequirements = course.requirements.courses.every(
+				(courseTitle) => courseHistoryMap[courseTitle] >= 0.75
 			);
 		}
-		return meetsGradeRequirements && meetsCourseRequirements;
+		const meetsAllRequirements =
+			meetsGradeRequirements && meetsCourseRequirements;
+		if (
+			matchesCreditType &&
+			courseIsNotFull &&
+			notAlreadyInSchedule &&
+			isNewOrRepeatable &&
+			meetsAllRequirements
+		) {
+			return true;
+		}
+		return false;
 	});
 }
 
@@ -1220,9 +1302,20 @@ function getAvailablePeriods(curSchedule) {
 	return allPeriods.filter((period) => !enrolledPeriods.includes(period));
 }
 
+function chooseRandCourseByPopularity(courses) {
+	const chooseList = [];
+	for (const course of courses) {
+		for (let i = 0; i < course.popularity; i++) {
+			chooseList.push(course);
+		}
+	}
+	const randNdx = Math.floor(Math.random() * chooseList.length);
+	return chooseList[randNdx];
+}
+
 function simulateSchoolYear() {
 	// Create random number of new 9th grade students (80 - 140);
-	const randNumNewStudents = Math.floor(Math.random() * (100 - 50) + 50);
+	const randNumNewStudents = Math.floor(Math.random() * (45 - 5) + 5);
 	const newStudents = createStudents(randNumNewStudents);
 
 	// Create new 'year' object with courses and students
@@ -1230,137 +1323,124 @@ function simulateSchoolYear() {
 		id: generateId(),
 		simYear: allYearsReport.length + 1,
 		courses: [...scheduleCourses],
-		students: [...getAllActivePrevStudents(), ...newStudents],
+		students: [...getAllActiveStudents(), ...newStudents],
 		issues: [],
 	};
 
-	// Iterate over both semesters...
-	for (let semester = 1; semester < 3; semester++) {
-		// Get all students of a certain grade level and iterate through each (start with seniors)
+	for (let quarter = 1; quarter < 5; quarter++) {
 		for (let gradeLevel = 13; gradeLevel > 8; gradeLevel--) {
-			const curStudents = newYear.students.filter(
-				(student) => student.grade === gradeLevel
-			);
-
-			// Loop over each student for each semester and evaluate needed credits
+			const curStudents = getStudentsByGrade(newYear.students, gradeLevel);
 			for (const student of curStudents) {
+				const courseHistoryMap = getCourseHistoryMap(student);
 				const studentSchedule = [];
-				const courseHistoryIds = getPassedCoursesIds(student);
-				const availableCourses = getAvailableCourses(
-					courseHistoryIds,
-					student.grade,
-					semester,
-					newYear.courses
-				);
-
-				// Enroll in class based on credits first, but try to fill all periods
-				// NEED ACTUAL LOGIC FOR PICKING COURSES INSTEAD OF RANDOM CHOICE
-				const coreRequirements = [
-					{ creditType: "english", creditValue: 4 },
-					{ creditType: "math", creditValue: 3 },
-					{ creditType: "science", creditValue: 3 },
-					{ creditType: "social", creditValue: 3 },
-				];
-				for (const requirement of coreRequirements) {
-					if (
-						student.credits[requirement.creditType] < requirement.creditValue
-					) {
-						const subjectCourses = availableCourses.filter(
-							(course) => course.creditType === requirement.creditType
+				for (const creditType of orderedCredits) {
+					if (student.credits[creditType] < creditRequirements[creditType]) {
+						const availableCourses = getAvailableCoursesByCredit(
+							courseHistoryMap,
+							student.grade,
+							studentSchedule,
+							newYear.courses,
+							creditType
 						);
-						const availablePeriods = getAvailablePeriods(studentSchedule);
-						const possibleCourses = subjectCourses.filter((course) =>
-							availablePeriods.includes(course.period)
-						);
-
-						if (possibleCourses.length) {
-							const randNdx = Math.floor(
-								Math.random() * possibleCourses.length
-							);
-							const selectedCourse = possibleCourses[randNdx];
-							const courseGrade = student.proficiency * selectedCourse.passRate;
-							const didPass = courseGrade >= 60;
-
-							const curYearCourseRef = newYear.courses.find(
-								(course) => course.id === selectedCourse.id
-							);
+						if (availableCourses.length) {
+							const selectedCourse =
+								chooseRandCourseByPopularity(availableCourses);
+							const didPass = course.passRate > Math.random();
 							const studentCourseRef = {
 								id: selectedCourse.id,
 								title: selectedCourse.title,
 								instructor: selectedCourse.instructor,
 								period: selectedCourse.period,
-								semester: selectedCourse.semester,
 								creditType: selectedCourse.creditType,
-								creditValue: selectedCourse.creditValue,
 								didPass: didPass,
 							};
-
-							curYearCourseRef.students.push(student);
 							studentSchedule.push(studentCourseRef);
-							if (didPass) {
-								curYearCourseRef.passCount++;
-								student.credits[requirement.creditType] +=
-									curYearCourseRef.creditValue;
-							}
+						} else {
+							newYear.issues.push({
+								student: student,
+								message: `No courses found for ${student.grade}th student who needed more ${creditType} credits`,
+							});
 						}
-					} else {
-						// todo - scenario when there are no remaining core requirements ...
 					}
 				}
-
-				// After looping through all the core content requirements, fill remaining periods
 				const remainingPeriods = getAvailablePeriods(studentSchedule);
-				for (const period of remainingPeriods) {
-					const possibleCourses = availableCourses.filter(
-						(course) => course.period === period
-					);
-					if (possibleCourses.length) {
-						const randNdx = Math.floor(Math.random() * possibleCourses.length);
-						const selectedCourse = possibleCourses[randNdx];
-						const courseGrade = student.proficiency * selectedCourse.passRate;
-						const didPass = courseGrade >= 60;
-
-						const curYearCourseRef = newYear.courses.find(
-							(course) => course.id === selectedCourse.id
-						);
-						const studentCourseRef = {
-							id: selectedCourse.id,
-							title: selectedCourse.title,
-							instructor: selectedCourse.instructor,
-							period: selectedCourse.period,
-							semester: selectedCourse.semester,
-							creditType: selectedCourse.creditType,
-							creditValue: selectedCourse.creditValue,
-							didPass: didPass,
-						};
-
-						curYearCourseRef.students.push(student);
-						studentSchedule.push(studentCourseRef);
-						if (didPass) {
-							curYearCourseRef.passCount++;
-							student.credits[selectedCourse.creditType] +=
-								curYearCourseRef.creditValue;
-						}
-					} else {
-						newYear.issues.push({
-							id: generateId(),
-							semester: semester,
-							student: student,
-							period: period,
-							message: "Could not find any available courses",
-						});
-					}
+				if (remainingPeriods.length) {
+					// fill remaining periods
 				}
-				student.courseHistory[student.grade].push(studentSchedule);
-				if (semester === 2) {
-					student.grade++;
-				}
+				// then, assign credits for each course (remember, some credits may go to other categories...)
+				// then, add student to the new year object report
 			}
 		}
-	}
 
-	allYearsReport.push(newYear);
+		// only after completing all student simulations, then increase all student grades by 1
+	}
 }
+
+// 			curYearCourseRef.students.push(student);
+// 			studentSchedule.push(studentCourseRef);
+// 			if (didPass) {
+// 				curYearCourseRef.passCount++;
+// 				student.credits[requirement.creditType] +=
+// 					curYearCourseRef.creditValue;
+// 			}
+// 		}
+// 	} else {
+// 		// todo - scenario when there are no remaining core requirements ...
+// 	}
+// }
+
+// After looping through all the core content requirements, fill remaining periods
+// 			const remainingPeriods = getAvailablePeriods(studentSchedule);
+// 			for (const period of remainingPeriods) {
+// 				const possibleCourses = availableCourses.filter(
+// 					(course) => course.period === period
+// 				);
+// 				if (possibleCourses.length) {
+// 					const randNdx = Math.floor(Math.random() * possibleCourses.length);
+// 					const selectedCourse = possibleCourses[randNdx];
+// 					const courseGrade = student.proficiency * selectedCourse.passRate;
+// 					const didPass = courseGrade >= 60;
+
+// 					const curYearCourseRef = newYear.courses.find(
+// 						(course) => course.id === selectedCourse.id
+// 					);
+// 					const studentCourseRef = {
+// 						id: selectedCourse.id,
+// 						title: selectedCourse.title,
+// 						instructor: selectedCourse.instructor,
+// 						period: selectedCourse.period,
+// 						semester: selectedCourse.semester,
+// 						creditType: selectedCourse.creditType,
+// 						creditValue: selectedCourse.creditValue,
+// 						didPass: didPass,
+// 					};
+
+// 					curYearCourseRef.students.push(student);
+// 					studentSchedule.push(studentCourseRef);
+// 					if (didPass) {
+// 						curYearCourseRef.passCount++;
+// 						student.credits[selectedCourse.creditType] +=
+// 							curYearCourseRef.creditValue;
+// 					}
+// 				} else {
+// 					newYear.issues.push({
+// 						id: generateId(),
+// 						semester: semester,
+// 						student: student,
+// 						period: period,
+// 						message: "Could not find any available courses",
+// 					});
+// 				}
+// 			}
+// 			student.courseHistory[student.grade].push(studentSchedule);
+// 			if (semester === 2) {
+// 				student.grade++;
+// 			}
+// 		}
+// 	}
+// }
+
+// allYearsReport.push(newYear);
 
 for (let i = 0; i < 4; i++) {
 	simulateSchoolYear();
