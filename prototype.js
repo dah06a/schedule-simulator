@@ -45,7 +45,7 @@
 // submit an issue if a student cannot fill schedule periods only
 
 const allYearsReport = [];
-const maxClassSize = 25;
+const creditValue = 0.25;
 const creditRequirements = {
 	english: 4,
 	math: 3,
@@ -1255,15 +1255,13 @@ function getCourseHistoryMap(student) {
 	return courseHistoryMap;
 }
 
-function getAvailableCoursesByCredit(
+function getAvailableCourses(
 	courseHistoryMap,
 	studentGrade,
 	curSchedule,
-	curYearCourses,
-	creditType
+	curYearCourses
 ) {
 	return curYearCourses.filter((course) => {
-		const matchesCreditType = course.creditType === creditType;
 		const courseIsNotFull = course.students.length < course.maxSize;
 		const notAlreadyInSchedule = !curSchedule.includes(course.title);
 		const isNewOrRepeatable =
@@ -1284,7 +1282,6 @@ function getAvailableCoursesByCredit(
 		const meetsAllRequirements =
 			meetsGradeRequirements && meetsCourseRequirements;
 		if (
-			matchesCreditType &&
 			courseIsNotFull &&
 			notAlreadyInSchedule &&
 			isNewOrRepeatable &&
@@ -1313,6 +1310,28 @@ function chooseRandCourseByPopularity(courses) {
 	return chooseList[randNdx];
 }
 
+function assignCredits(schedule, curCredits) {
+	const newCredits = [...curCredits];
+	for (const course of schedule) {
+		if (course.didPass) {
+			if (
+				curCredits[course.creditType] < creditRequirements[course.creditType]
+			) {
+				newCredits[course.creditType] += creditValue;
+			} else if (
+				(course.creditType === "akHistory" ||
+					course.creditType === "government") &&
+				curCredits.social < creditRequirements.social
+			) {
+				newCredits.social += creditValue;
+			} else {
+				newCredits.elective += creditValue;
+			}
+		}
+	}
+	return newCredits;
+}
+
 function simulateSchoolYear() {
 	// Create random number of new 9th grade students (80 - 140);
 	const randNumNewStudents = Math.floor(Math.random() * (45 - 5) + 5);
@@ -1327,120 +1346,99 @@ function simulateSchoolYear() {
 		issues: [],
 	};
 
-	for (let quarter = 1; quarter < 5; quarter++) {
-		for (let gradeLevel = 13; gradeLevel > 8; gradeLevel--) {
-			const curStudents = getStudentsByGrade(newYear.students, gradeLevel);
-			for (const student of curStudents) {
-				const courseHistoryMap = getCourseHistoryMap(student);
-				const studentSchedule = [];
-				for (const creditType of orderedCredits) {
-					if (student.credits[creditType] < creditRequirements[creditType]) {
-						const availableCourses = getAvailableCoursesByCredit(
-							courseHistoryMap,
-							student.grade,
-							studentSchedule,
-							newYear.courses,
-							creditType
-						);
-						if (availableCourses.length) {
-							const selectedCourse =
-								chooseRandCourseByPopularity(availableCourses);
-							const didPass = course.passRate > Math.random();
-							const studentCourseRef = {
-								id: selectedCourse.id,
-								title: selectedCourse.title,
-								instructor: selectedCourse.instructor,
-								period: selectedCourse.period,
-								creditType: selectedCourse.creditType,
-								didPass: didPass,
-							};
-							studentSchedule.push(studentCourseRef);
-						} else {
-							newYear.issues.push({
-								student: student,
-								message: `No courses found for ${student.grade}th student who needed more ${creditType} credits`,
-							});
-						}
+	// Simulate school year enrollment for each student
+	for (let gradeLevel = 13; gradeLevel > 8; gradeLevel--) {
+		const curStudents = getStudentsByGrade(newYear.students, gradeLevel);
+		for (const student of curStudents) {
+			const courseHistoryMap = getCourseHistoryMap(student);
+			const studentSchedule = [];
+
+			// First, attempt to enroll based on credit type rankings
+			for (const creditType of orderedCredits) {
+				if (student.credits[creditType] < creditRequirements[creditType]) {
+					const curCreditTypeCourses = newYear.courses.filter(
+						(course) => course.creditType === creditType
+					);
+					const availableCourses = getAvailableCourses(
+						courseHistoryMap,
+						student.grade,
+						studentSchedule,
+						curCreditTypeCourses
+					);
+					if (availableCourses.length) {
+						const selectedCourse =
+							chooseRandCourseByPopularity(availableCourses);
+
+						for (let i = 0; i < 4; i++) {}
+						const didPass = course.passRate > Math.random();
+						const studentCourseRef = {
+							title: selectedCourse.title,
+							instructor: selectedCourse.instructor,
+							period: selectedCourse.period,
+							creditType: selectedCourse.creditType,
+							didPass: didPass,
+						};
+						studentSchedule.push(studentCourseRef);
+
+						// NEED TO UPDATE COURSE NUMBERS AND PASS COUNT
+					} else {
+						newYear.issues.push({
+							student: student,
+							type: "creditRequirementsCourseNotFound",
+							message: `No courses found for ${student.grade}th student who needed more ${creditType} credits`,
+						});
 					}
 				}
-				const remainingPeriods = getAvailablePeriods(studentSchedule);
-				if (remainingPeriods.length) {
-					// fill remaining periods
-				}
-				// then, assign credits for each course (remember, some credits may go to other categories...)
-				// then, add student to the new year object report
 			}
-		}
 
-		// only after completing all student simulations, then increase all student grades by 1
+			// Then, enroll in courses for any remaining empty periods
+			const remainingPeriods = getAvailablePeriods(studentSchedule);
+			if (remainingPeriods.length) {
+				for (const period of remainingPeriods) {
+					const curPeriodCourses = newYear.courses.filter(
+						(course) => course.period === period
+					);
+					const availableCourses = getAvailableCourses(
+						courseHistoryMap,
+						student.grade,
+						studentSchedule,
+						curPeriodCourses
+					);
+					if (availableCourses.length) {
+						const selectedCourse =
+							chooseRandCourseByPopularity(availableCourses);
+						const didPass = course.passRate > Math.random();
+						const studentCourseRef = {
+							title: selectedCourse.title,
+							instructor: selectedCourse.instructor,
+							period: selectedCourse.period,
+							creditType: selectedCourse.creditType,
+							didPass: didPass,
+						};
+						studentSchedule.push(studentCourseRef);
+					} else {
+						newYear.issues.push({
+							student: student,
+							type: "emptyPeriodCourseNotFound",
+							message: `No courses found for ${student.grade}th student who needed a class for ${period} period`,
+						});
+					}
+				}
+			}
+
+			// Finally, update each student course history and assign credits
+			const orderedSchedule = studentSchedule.sort(
+				(a, b) => a.period - b.period
+			);
+			student.courseHistory[student.grade] = orderedSchedule;
+			const updatedStudentCredits = assignCredits(
+				orderedSchedule,
+				student.credits
+			);
+			student.credits = updatedStudentCredits;
+		}
 	}
 }
-
-// 			curYearCourseRef.students.push(student);
-// 			studentSchedule.push(studentCourseRef);
-// 			if (didPass) {
-// 				curYearCourseRef.passCount++;
-// 				student.credits[requirement.creditType] +=
-// 					curYearCourseRef.creditValue;
-// 			}
-// 		}
-// 	} else {
-// 		// todo - scenario when there are no remaining core requirements ...
-// 	}
-// }
-
-// After looping through all the core content requirements, fill remaining periods
-// 			const remainingPeriods = getAvailablePeriods(studentSchedule);
-// 			for (const period of remainingPeriods) {
-// 				const possibleCourses = availableCourses.filter(
-// 					(course) => course.period === period
-// 				);
-// 				if (possibleCourses.length) {
-// 					const randNdx = Math.floor(Math.random() * possibleCourses.length);
-// 					const selectedCourse = possibleCourses[randNdx];
-// 					const courseGrade = student.proficiency * selectedCourse.passRate;
-// 					const didPass = courseGrade >= 60;
-
-// 					const curYearCourseRef = newYear.courses.find(
-// 						(course) => course.id === selectedCourse.id
-// 					);
-// 					const studentCourseRef = {
-// 						id: selectedCourse.id,
-// 						title: selectedCourse.title,
-// 						instructor: selectedCourse.instructor,
-// 						period: selectedCourse.period,
-// 						semester: selectedCourse.semester,
-// 						creditType: selectedCourse.creditType,
-// 						creditValue: selectedCourse.creditValue,
-// 						didPass: didPass,
-// 					};
-
-// 					curYearCourseRef.students.push(student);
-// 					studentSchedule.push(studentCourseRef);
-// 					if (didPass) {
-// 						curYearCourseRef.passCount++;
-// 						student.credits[selectedCourse.creditType] +=
-// 							curYearCourseRef.creditValue;
-// 					}
-// 				} else {
-// 					newYear.issues.push({
-// 						id: generateId(),
-// 						semester: semester,
-// 						student: student,
-// 						period: period,
-// 						message: "Could not find any available courses",
-// 					});
-// 				}
-// 			}
-// 			student.courseHistory[student.grade].push(studentSchedule);
-// 			if (semester === 2) {
-// 				student.grade++;
-// 			}
-// 		}
-// 	}
-// }
-
-// allYearsReport.push(newYear);
 
 for (let i = 0; i < 4; i++) {
 	simulateSchoolYear();
