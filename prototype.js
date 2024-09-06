@@ -87,7 +87,6 @@ const scheduleCourses = [
 			courses: ["English I", "English II", "English III", "English IV"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -104,7 +103,6 @@ const scheduleCourses = [
 			courses: ["English I", "English II"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -121,7 +119,6 @@ const scheduleCourses = [
 			courses: ["English I"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -138,7 +135,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -155,7 +151,6 @@ const scheduleCourses = [
 			courses: ["English I"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -172,7 +167,6 @@ const scheduleCourses = [
 			courses: ["English I", "English II", "English III"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 
@@ -191,7 +185,6 @@ const scheduleCourses = [
 			courses: ["Pre-Algebra"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -208,7 +201,6 @@ const scheduleCourses = [
 			courses: ["Pre-Algebra", "Algebra I", "Geometry", "Algebra II"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -225,7 +217,6 @@ const scheduleCourses = [
 			courses: ["Pre-Algebra", "Algebra I"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -242,7 +233,6 @@ const scheduleCourses = [
 			courses: ["Pre-Algebra"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -259,7 +249,6 @@ const scheduleCourses = [
 			courses: ["Pre-Algebra", "Algebra I", "Geometry"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -276,7 +265,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 
@@ -295,7 +283,6 @@ const scheduleCourses = [
 			courses: ["Science I"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -312,7 +299,6 @@ const scheduleCourses = [
 			courses: ["Science I", "Science II"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -329,7 +315,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -346,7 +331,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -363,7 +347,6 @@ const scheduleCourses = [
 			courses: ["Science I", "Science II"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -380,7 +363,6 @@ const scheduleCourses = [
 			courses: ["Science I"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 
@@ -399,7 +381,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -416,7 +397,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -433,7 +413,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -450,7 +429,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -467,7 +445,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -484,7 +461,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 
@@ -503,7 +479,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -520,7 +495,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -537,7 +511,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -554,7 +527,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 
@@ -573,7 +545,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -590,7 +561,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -607,14 +577,13 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 
 	// MATH/SCIENCE/HEALTH
 	{
 		title: "Pre-Algebra",
-		creditType: "physical",
+		creditType: "math",
 		instructor: "Mr. X",
 		period: 1,
 		passRate: 0.9,
@@ -626,7 +595,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -643,7 +611,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -660,7 +627,6 @@ const scheduleCourses = [
 			courses: ["Pre-Algebra", "Algebra I"],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -677,7 +643,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -694,7 +659,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 
@@ -713,7 +677,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -730,7 +693,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -747,7 +709,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -764,7 +725,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -781,7 +741,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -798,7 +757,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -815,7 +773,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -832,7 +789,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -849,7 +805,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -866,7 +821,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -883,7 +837,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -900,7 +853,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 	{
@@ -917,7 +869,6 @@ const scheduleCourses = [
 			courses: [],
 			grade: null,
 		},
-		classSize: 0,
 		popularity: 1,
 	},
 ];
@@ -1191,6 +1142,8 @@ function generateStudent() {
 			physical: 0,
 			health: 0,
 			vocEd: 0,
+			akHistory: 0,
+			government: 0,
 			elective: 0,
 		},
 		courseHistory: {
@@ -1232,23 +1185,10 @@ function getStudentsByGrade(allStudents, grade) {
 }
 
 function getCourseHistoryMap(student) {
-	const allPassedCourses = [];
-	for (const year of Object.values(student.courseHistory)) {
-		for (const quarter of year) {
-			for (const course of quarter) {
-				if (course.didPass) {
-					allPassedCourses.push(course.title);
-				}
-			}
-		}
-	}
-
 	const courseHistoryMap = {};
-	for (const course of allPassedCourses) {
-		if (!courseHistoryMap[course]) {
-			courseHistoryMap[course] = 0.25;
-		} else {
-			courseHistoryMap += 0.25;
+	for (const year of Object.values(student.courseHistory)) {
+		for (const course of year) {
+			courseHistoryMap[course.title] = course.creditsEarned;
 		}
 	}
 
@@ -1264,6 +1204,9 @@ function getAvailableCourses(
 	return curYearCourses.filter((course) => {
 		const courseIsNotFull = course.students.length < course.maxSize;
 		const notAlreadyInSchedule = !curSchedule.includes(course.title);
+		const periodIsAvailable = getAvailablePeriods(curSchedule).includes(
+			course.period
+		);
 		const isNewOrRepeatable =
 			course.isRepeatable ||
 			!courseHistoryMap[course] ||
@@ -1284,6 +1227,7 @@ function getAvailableCourses(
 		if (
 			courseIsNotFull &&
 			notAlreadyInSchedule &&
+			periodIsAvailable &&
 			isNewOrRepeatable &&
 			meetsAllRequirements
 		) {
@@ -1310,31 +1254,36 @@ function chooseRandCourseByPopularity(courses) {
 	return chooseList[randNdx];
 }
 
-function assignCredits(schedule, curCredits) {
-	const newCredits = [...curCredits];
-	for (const course of schedule) {
-		if (course.didPass) {
-			if (
-				curCredits[course.creditType] < creditRequirements[course.creditType]
-			) {
-				newCredits[course.creditType] += creditValue;
-			} else if (
-				(course.creditType === "akHistory" ||
-					course.creditType === "government") &&
-				curCredits.social < creditRequirements.social
-			) {
-				newCredits.social += creditValue;
-			} else {
-				newCredits.elective += creditValue;
-			}
+function assignCredits(studentSchedule, curCredits) {
+	for (const course of studentSchedule) {
+		if (curCredits[course.creditType] < creditRequirements[course.creditType]) {
+			curCredits[course.creditType] += course.creditsEarned;
+		} else if (
+			(course.creditType === "akHistory" ||
+				course.creditType === "government") &&
+			curCredits.social < creditRequirements.social
+		) {
+			curCredits.social += course.creditsEarned;
+		} else {
+			curCredits.elective += course.creditsEarned;
 		}
 	}
-	return newCredits;
+	return curCredits;
+}
+
+function checkDidGraduate(studentCredits) {
+	let meetsRequirements = true;
+	for (const [creditType, creditValue] of Object.entries(studentCredits)) {
+		if (creditRequirements[creditType] > creditValue) {
+			meetsRequirements = false;
+		}
+	}
+	return meetsRequirements;
 }
 
 function simulateSchoolYear() {
 	// Create random number of new 9th grade students (80 - 140);
-	const randNumNewStudents = Math.floor(Math.random() * (45 - 5) + 5);
+	const randNumNewStudents = Math.floor(Math.random() * (30 - 5) + 5);
 	const newStudents = createStudents(randNumNewStudents);
 
 	// Create new 'year' object with courses and students
@@ -1366,26 +1315,60 @@ function simulateSchoolYear() {
 						curCreditTypeCourses
 					);
 					if (availableCourses.length) {
-						const selectedCourse =
-							chooseRandCourseByPopularity(availableCourses);
-
-						for (let i = 0; i < 4; i++) {}
-						const didPass = course.passRate > Math.random();
-						const studentCourseRef = {
+						// Handle special cases for Freshmen going to some specific courses
+						let selectedCourse;
+						if (
+							student.grade === 9 &&
+							creditType === "english" &&
+							availableCourses.find((course) => course.title === "English I")
+						) {
+							selectedCourse = availableCourses.find(
+								(course) => course.title === "English I"
+							);
+						} else if (
+							student.grade === 9 &&
+							creditType === "akHistory" &&
+							availableCourses.find(
+								(course) => course.title === "Alaska History"
+							)
+						) {
+							selectedCourse = availableCourses.find(
+								(course) => course.title === "Alaska History"
+							);
+						} else if (student.grade === 9 && creditType === "health") {
+							continue;
+						} else {
+							selectedCourse = chooseRandCourseByPopularity(availableCourses);
+						}
+						let creditsEarned = 0;
+						for (let i = 0; i < 4; i++) {
+							const didPassQuarter = selectedCourse.passRate > Math.random();
+							if (didPassQuarter) {
+								creditsEarned += creditValue;
+							}
+						}
+						const courseRef = {
 							title: selectedCourse.title,
 							instructor: selectedCourse.instructor,
 							period: selectedCourse.period,
 							creditType: selectedCourse.creditType,
-							didPass: didPass,
+							creditsEarned: creditsEarned,
 						};
-						studentSchedule.push(studentCourseRef);
-
-						// NEED TO UPDATE COURSE NUMBERS AND PASS COUNT
-					} else {
+						studentSchedule.push(courseRef);
+						const studentRef = {
+							id: student.id,
+							name: student.name,
+							grade: student.grade,
+						};
+						selectedCourse.students.push(studentRef);
+						if (creditsEarned >= 0.75) {
+							selectedCourse.passCount++;
+						}
+					} else if (student.grade > 11) {
 						newYear.issues.push({
 							student: student,
 							type: "creditRequirementsCourseNotFound",
-							message: `No courses found for ${student.grade}th student who needed more ${creditType} credits`,
+							message: `No courses found for senior who needed more ${creditType} credits`,
 						});
 					}
 				}
@@ -1407,15 +1390,30 @@ function simulateSchoolYear() {
 					if (availableCourses.length) {
 						const selectedCourse =
 							chooseRandCourseByPopularity(availableCourses);
-						const didPass = course.passRate > Math.random();
+						let creditsEarned = 0;
+						for (let i = 0; i < 4; i++) {
+							const didPassQuarter = selectedCourse.passRate > Math.random();
+							if (didPassQuarter) {
+								creditsEarned += creditValue;
+							}
+						}
 						const studentCourseRef = {
 							title: selectedCourse.title,
 							instructor: selectedCourse.instructor,
 							period: selectedCourse.period,
 							creditType: selectedCourse.creditType,
-							didPass: didPass,
+							creditsEarned: creditsEarned,
 						};
 						studentSchedule.push(studentCourseRef);
+						const studentRef = {
+							id: student.id,
+							name: student.name,
+							grade: student.grade,
+						};
+						selectedCourse.students.push(studentRef);
+						if (creditsEarned >= 0.75) {
+							selectedCourse.passCount++;
+						}
 					} else {
 						newYear.issues.push({
 							student: student,
@@ -1438,18 +1436,20 @@ function simulateSchoolYear() {
 			student.credits = updatedStudentCredits;
 		}
 	}
+	for (const student of newYear.students) {
+		student.didGraduate = checkDidGraduate(student.credits);
+		if (!student.didGraduate && student.grade > 12) {
+			student.didDropout = true;
+		}
+		if (!student.didGraduate && !student.didDropout) {
+			student.grade++;
+		}
+	}
+	allYearsReport.push(newYear);
 }
 
 for (let i = 0; i < 4; i++) {
 	simulateSchoolYear();
-	for (const year of allYearsReport) {
-		for (const student of year.students) {
-			console.log(student.grade, year.simYear);
-			if (!student.didGraduate && !student.didDropout) {
-				student.grade++;
-			}
-		}
-	}
 }
 
 console.log(allYearsReport);
