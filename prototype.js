@@ -1,5 +1,3 @@
-// CURRENT ISSUE - 12 grade history missing
-
 // TODO
 // add all global settings vars
 // fix the .find() for selecting courses (could be more than 1 match)
@@ -7,52 +5,20 @@
 // add props to courses for making priority for certain grade levels
 // need to handle lab classes differently - try to select only if failures
 // need a way to handle in course props when class counts towards multiple credits - akhistory
+// when selecting a new class, cannot choose same class that has already been passed
+// need better/updated method of predicting if student will pass a class (currently - profiency * passRate = grade)
+// if students start taking band, they will likely continue taking band ...
+// simulate student switching courses middle of year
+// simulate student dropping out
+// simulate students entering district middle of year
+// simulate some students getting pe credit through a sport
 
-// NOTES FROM CALL
-// different classes can have different max class sizes
-// 5 to 45 would be min and max for incoming
-// main goals:
-// schedule should not change year to year
-// reduce 'bottlenecks' of classes/periods that are needed by everyone
-// reduce teacher preps when possible
-// maintain stable class sizes (best if greater than 10 and smaller than 27 for core classes)
-// freshman should try to take AK history and other classes should try to take health
-
-//Ideas:
-// start with older kids first is good
-// but - then go to the named courses next - akhistory, government, health, vocEd
-// and THEN core requirements is good
-// continue with random selection after that, but popularity value would be better
-// could also rank importance of credits - ex: vocEd is more important than PE
-// vocEd
-// pe
-// elective
-// need to handle 'Lab' classes ...
-// if failed more than 1 credit in the past for math or english, then try to enroll in labs
-// need to record when students need credits but cannot take the course
-// need to prototype a system for how to generate random students year
-
-// Metrics:
+// METRICS TO REPORT LATER:
 // average class sizes - overall, by period, by teacher/subject
 // how many kids could not graduate by senior year
 // how many kids total in each class-year
 // where are the bottlenecks ...
 // measure by looking at the same course class sizes in the same schedule
-
-// TO SUMMARIZE FOR STEPHEN CALL
-// Initial implementation will be in Google Sheets
-// Need to create sheet format together where info can be easily added and used by my program
-// Need to clarify all rules and logic of flow from how classes are selected for students each year
-// Need to clarify exactly what is needed from output - but most stats should be easy to collect
-// Google sheet can also have a few cells reserved for basic settings for the whole simulation
-
-// Later - can possibly turn this into a web app ... if we think it's a good/valuable idea :)
-
-// max class for core classes and PE = 32
-// max class for vocEd and lab = 15
-// if students start taking band, they will likely continue taking band ...
-// check to make sure that students do not have same class in the year (welding 1st period and 5th period)
-// submit an issue if a student cannot fill schedule periods only
 
 // Global Settings Variables
 const creditValue = 0.25;
@@ -1484,17 +1450,3 @@ for (let i = 0; i < 5; i++) {
 }
 
 console.log(allYearsReport);
-
-// To do ...
-// Create check to see if students have met all requirements and make change
-
-// Logic ideas and reminders
-// when selecting a new class, cannot choose same class that has already been passed
-// need better/updated method of predicting if student will pass a class (currently - profiency * passRate = grade)
-
-// Extras ...
-// simulate student switching courses middle of year
-// simulate student dropping out
-// simulate students entering district middle of year
-// simulate some students getting health credit through a sport
-// simulate updating schedule each with with some different courses
