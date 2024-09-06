@@ -1,3 +1,13 @@
+// CURRENT ISSUE - 12 grade history missing
+
+// TODO
+// add all global settings vars
+// fix the .find() for selecting courses (could be more than 1 match)
+// create "paths" by adding props to courses for finding next course
+// add props to courses for making priority for certain grade levels
+// need to handle lab classes differently - try to select only if failures
+// need a way to handle in course props when class counts towards multiple credits - akhistory
+
 // NOTES FROM CALL
 // different classes can have different max class sizes
 // 5 to 45 would be min and max for incoming
@@ -44,8 +54,14 @@
 // check to make sure that students do not have same class in the year (welding 1st period and 5th period)
 // submit an issue if a student cannot fill schedule periods only
 
-const allYearsReport = [];
+// Global Settings Variables
 const creditValue = 0.25;
+const considerPass = 0.75;
+const scheduleSystem = "quarter";
+const maxIncomingFreshmen = 45;
+const minIncomingFreshmen = 5;
+
+const allYearsReport = [];
 const creditRequirements = {
 	english: 4,
 	math: 3,
@@ -61,12 +77,12 @@ const creditRequirements = {
 const orderedCredits = [
 	"akHistory",
 	"government",
-	"health",
-	"vocEd",
 	"english",
 	"math",
 	"science",
 	"social",
+	"health",
+	"vocEd",
 	"physical",
 	"elective",
 ];
@@ -78,7 +94,7 @@ const scheduleCourses = [
 		creditType: "english",
 		instructor: "Mr. X",
 		period: 1,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -94,7 +110,7 @@ const scheduleCourses = [
 		creditType: "english",
 		instructor: "Mr. X",
 		period: 2,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -110,7 +126,7 @@ const scheduleCourses = [
 		creditType: "english",
 		instructor: "Mr. X",
 		period: 3,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -126,7 +142,7 @@ const scheduleCourses = [
 		creditType: "english",
 		instructor: "Mr. X",
 		period: 4,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -142,7 +158,7 @@ const scheduleCourses = [
 		creditType: "english",
 		instructor: "Mr. X",
 		period: 5,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -158,7 +174,7 @@ const scheduleCourses = [
 		creditType: "english",
 		instructor: "Mr. X",
 		period: 6,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -176,7 +192,7 @@ const scheduleCourses = [
 		creditType: "math",
 		instructor: "Mr. X",
 		period: 1,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -192,7 +208,7 @@ const scheduleCourses = [
 		creditType: "math",
 		instructor: "Mr. X",
 		period: 2,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -208,7 +224,7 @@ const scheduleCourses = [
 		creditType: "math",
 		instructor: "Mr. X",
 		period: 3,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -224,7 +240,7 @@ const scheduleCourses = [
 		creditType: "math",
 		instructor: "Mr. X",
 		period: 4,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -240,7 +256,7 @@ const scheduleCourses = [
 		creditType: "math",
 		instructor: "Mr. X",
 		period: 5,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -256,7 +272,7 @@ const scheduleCourses = [
 		creditType: "math",
 		instructor: "Mr. X",
 		period: 6,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -274,7 +290,7 @@ const scheduleCourses = [
 		creditType: "science",
 		instructor: "Mr. X",
 		period: 1,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -290,7 +306,7 @@ const scheduleCourses = [
 		creditType: "science",
 		instructor: "Mr. X",
 		period: 2,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -306,7 +322,7 @@ const scheduleCourses = [
 		creditType: "science",
 		instructor: "Mr. X",
 		period: 3,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -322,7 +338,7 @@ const scheduleCourses = [
 		creditType: "science",
 		instructor: "Mr. X",
 		period: 4,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -338,7 +354,7 @@ const scheduleCourses = [
 		creditType: "science",
 		instructor: "Mr. X",
 		period: 5,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -354,7 +370,7 @@ const scheduleCourses = [
 		creditType: "science",
 		instructor: "Mr. X",
 		period: 6,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -372,7 +388,7 @@ const scheduleCourses = [
 		creditType: "social",
 		instructor: "Mr. X",
 		period: 1,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -388,7 +404,7 @@ const scheduleCourses = [
 		creditType: "akHistory",
 		instructor: "Mr. X",
 		period: 2,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -404,7 +420,7 @@ const scheduleCourses = [
 		creditType: "government",
 		instructor: "Mr. X",
 		period: 3,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -420,7 +436,7 @@ const scheduleCourses = [
 		creditType: "government",
 		instructor: "Mr. X",
 		period: 4,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -436,7 +452,7 @@ const scheduleCourses = [
 		creditType: "akHistory",
 		instructor: "Mr. X",
 		period: 5,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -452,7 +468,7 @@ const scheduleCourses = [
 		creditType: "social",
 		instructor: "Mr. X",
 		period: 6,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -470,7 +486,7 @@ const scheduleCourses = [
 		creditType: "english",
 		instructor: "Mr. X",
 		period: 1,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 15,
 		isRepeatable: true,
@@ -486,7 +502,7 @@ const scheduleCourses = [
 		creditType: "social",
 		instructor: "Mr. X",
 		period: 3,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -502,7 +518,7 @@ const scheduleCourses = [
 		creditType: "english",
 		instructor: "Mr. X",
 		period: 4,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 15,
 		isRepeatable: true,
@@ -518,7 +534,7 @@ const scheduleCourses = [
 		creditType: "math",
 		instructor: "Mr. X",
 		period: 5,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 15,
 		isRepeatable: true,
@@ -536,7 +552,7 @@ const scheduleCourses = [
 		creditType: "physical",
 		instructor: "Mr. X",
 		period: 1,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: true,
@@ -552,7 +568,7 @@ const scheduleCourses = [
 		creditType: "physical",
 		instructor: "Mr. X",
 		period: 2,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: true,
@@ -568,7 +584,7 @@ const scheduleCourses = [
 		creditType: "physical",
 		instructor: "Mr. X",
 		period: 4,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: true,
@@ -586,7 +602,7 @@ const scheduleCourses = [
 		creditType: "math",
 		instructor: "Mr. X",
 		period: 1,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -602,7 +618,7 @@ const scheduleCourses = [
 		creditType: "health",
 		instructor: "Mr. X",
 		period: 2,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -618,7 +634,7 @@ const scheduleCourses = [
 		creditType: "math",
 		instructor: "Mr. X",
 		period: 3,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -634,7 +650,7 @@ const scheduleCourses = [
 		creditType: "health",
 		instructor: "Mr. X",
 		period: 4,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: false,
@@ -650,7 +666,7 @@ const scheduleCourses = [
 		creditType: "science",
 		instructor: "Mr. X",
 		period: 6,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: true,
@@ -668,7 +684,7 @@ const scheduleCourses = [
 		creditType: "vocEd",
 		instructor: "Mr. X",
 		period: 1,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 15,
 		isRepeatable: true,
@@ -684,7 +700,7 @@ const scheduleCourses = [
 		creditType: "vocEd",
 		instructor: "Mr. X",
 		period: 2,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 15,
 		isRepeatable: true,
@@ -700,7 +716,7 @@ const scheduleCourses = [
 		creditType: "vocEd",
 		instructor: "Mr. X",
 		period: 3,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 15,
 		isRepeatable: true,
@@ -716,7 +732,7 @@ const scheduleCourses = [
 		creditType: "vocEd",
 		instructor: "Mr. X",
 		period: 4,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 15,
 		isRepeatable: true,
@@ -732,7 +748,7 @@ const scheduleCourses = [
 		creditType: "vocEd",
 		instructor: "Mr. X",
 		period: 5,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 15,
 		isRepeatable: true,
@@ -748,7 +764,7 @@ const scheduleCourses = [
 		creditType: "vocEd",
 		instructor: "Mr. X",
 		period: 6,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 15,
 		isRepeatable: true,
@@ -764,7 +780,7 @@ const scheduleCourses = [
 		creditType: "vocEd",
 		instructor: "Mr. X",
 		period: 4,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 15,
 		isRepeatable: true,
@@ -780,7 +796,7 @@ const scheduleCourses = [
 		creditType: "vocEd",
 		instructor: "Mr. X",
 		period: 5,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 15,
 		isRepeatable: true,
@@ -796,7 +812,7 @@ const scheduleCourses = [
 		creditType: "vocEd",
 		instructor: "Mr. X",
 		period: 6,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 15,
 		isRepeatable: true,
@@ -812,7 +828,7 @@ const scheduleCourses = [
 		creditType: "elective",
 		instructor: "Mr. X",
 		period: 1,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: true,
@@ -828,7 +844,7 @@ const scheduleCourses = [
 		creditType: "elective",
 		instructor: "Mr. X",
 		period: 4,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: true,
@@ -844,7 +860,7 @@ const scheduleCourses = [
 		creditType: "elective",
 		instructor: "Mr. X",
 		period: 3,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: true,
@@ -860,7 +876,7 @@ const scheduleCourses = [
 		creditType: "elective",
 		instructor: "Mr. X",
 		period: 4,
-		passRate: 0.9,
+		passRate: 0.95,
 		passCount: 0,
 		maxSize: 32,
 		isRepeatable: true,
@@ -1166,12 +1182,17 @@ function createStudents(numOfStudents = 25) {
 	return students;
 }
 
+// CAN IMPROVE THIS BY STARTING AT LAST YEAR AND ONLY LOOKING BACK LAST 5 YEARS ...
 function getAllActiveStudents() {
 	const activeStudents = [];
 	for (const year of allYearsReport) {
 		if (year.students) {
 			for (const student of year.students) {
-				if (!student.didGraduate && !student.didDropout) {
+				if (
+					!student.didGraduate &&
+					!student.didDropout &&
+					!activeStudents.find((s) => s.id === student.id)
+				) {
 					activeStudents.push(student);
 				}
 			}
@@ -1256,16 +1277,23 @@ function chooseRandCourseByPopularity(courses) {
 
 function assignCredits(studentSchedule, curCredits) {
 	for (const course of studentSchedule) {
-		if (curCredits[course.creditType] < creditRequirements[course.creditType]) {
-			curCredits[course.creditType] += course.creditsEarned;
-		} else if (
-			(course.creditType === "akHistory" ||
-				course.creditType === "government") &&
-			curCredits.social < creditRequirements.social
-		) {
-			curCredits.social += course.creditsEarned;
-		} else {
-			curCredits.elective += course.creditsEarned;
+		let curCreditVal = course.creditsEarned;
+		while (curCreditVal > 0) {
+			if (
+				curCredits[course.creditType] < creditRequirements[course.creditType]
+			) {
+				curCredits[course.creditType] += 0.25;
+				if (
+					(course.creditType === "akHistory" ||
+						course.creditType === "government") &&
+					curCredits.social < creditRequirements.social
+				) {
+					curCredits.social += 0.25;
+				}
+			} else {
+				curCredits.elective += 0.25;
+			}
+			curCreditVal -= 0.25;
 		}
 	}
 	return curCredits;
@@ -1283,7 +1311,10 @@ function checkDidGraduate(studentCredits) {
 
 function simulateSchoolYear() {
 	// Create random number of new 9th grade students (80 - 140);
-	const randNumNewStudents = Math.floor(Math.random() * (30 - 5) + 5);
+	const randNumNewStudents = Math.floor(
+		Math.random() * (maxIncomingFreshmen - minIncomingFreshmen) +
+			minIncomingFreshmen
+	);
 	const newStudents = createStudents(randNumNewStudents);
 
 	// Create new 'year' object with courses and students
@@ -1448,7 +1479,7 @@ function simulateSchoolYear() {
 	allYearsReport.push(newYear);
 }
 
-for (let i = 0; i < 4; i++) {
+for (let i = 0; i < 5; i++) {
 	simulateSchoolYear();
 }
 
