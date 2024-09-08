@@ -1,6 +1,4 @@
 // TODO
-// add all global settings vars
-// fix the .find() for selecting courses (could be more than 1 match)
 // create "paths" by adding props to courses for finding next course
 // add props to courses for making priority for certain grade levels
 // need to handle lab classes differently - try to select only if failures
@@ -23,7 +21,7 @@
 // Global Settings Variables
 const creditValue = 0.25;
 const considerPass = 0.75;
-const scheduleSystem = "quarter";
+const scheduleSystemNum = 4;
 const maxIncomingFreshmen = 45;
 const minIncomingFreshmen = 5;
 
@@ -40,6 +38,7 @@ const creditRequirements = {
 	government: 1,
 	elective: 5,
 };
+
 const orderedCredits = [
 	"akHistory",
 	"government",
@@ -52,6 +51,11 @@ const orderedCredits = [
 	"physical",
 	"elective",
 ];
+
+const creditExtraLogic = {
+	akHistory: "social",
+	government: "social",
+};
 
 const scheduleCourses = [
 	// ENGLISH
@@ -1197,7 +1201,7 @@ function getAvailableCourses(
 		const isNewOrRepeatable =
 			course.isRepeatable ||
 			!courseHistoryMap[course] ||
-			courseHistoryMap[course] <= 0.75;
+			courseHistoryMap[course] <= considerPass;
 
 		let meetsGradeRequirements = true;
 		let meetsCourseRequirements = true;
@@ -1206,7 +1210,7 @@ function getAvailableCourses(
 		}
 		if (course.requirements.courses) {
 			meetsCourseRequirements = course.requirements.courses.every(
-				(courseTitle) => courseHistoryMap[courseTitle] >= 0.75
+				(courseTitle) => courseHistoryMap[courseTitle] >= considerPass
 			);
 		}
 		const meetsAllRequirements =
@@ -1231,6 +1235,9 @@ function getAvailablePeriods(curSchedule) {
 }
 
 function chooseRandCourseByPopularity(courses) {
+	if (courses.length === 1) {
+		return courses[0];
+	}
 	const chooseList = [];
 	for (const course of courses) {
 		for (let i = 0; i < course.popularity; i++) {
@@ -1248,18 +1255,20 @@ function assignCredits(studentSchedule, curCredits) {
 			if (
 				curCredits[course.creditType] < creditRequirements[course.creditType]
 			) {
-				curCredits[course.creditType] += 0.25;
-				if (
-					(course.creditType === "akHistory" ||
-						course.creditType === "government") &&
-					curCredits.social < creditRequirements.social
-				) {
-					curCredits.social += 0.25;
+				curCredits[course.creditType] += creditValue;
+				if (creditExtraLogic) {
+					const creditExtraType = creditExtraLogic[course.creditType];
+					if (
+						creditExtraType &&
+						curCredits[creditExtraType] < creditRequirements[creditExtraType]
+					) {
+						curCredits[creditExtraType] += creditValue;
+					}
 				}
 			} else {
-				curCredits.elective += 0.25;
+				curCredits.elective += creditValue;
 			}
-			curCreditVal -= 0.25;
+			curCreditVal -= creditValue;
 		}
 	}
 	return curCredits;
@@ -1319,9 +1328,10 @@ function simulateSchoolYear() {
 							creditType === "english" &&
 							availableCourses.find((course) => course.title === "English I")
 						) {
-							selectedCourse = availableCourses.find(
+							const desiredCourses = availableCourses.filter(
 								(course) => course.title === "English I"
 							);
+							selectedCourse = chooseRandCourseByPopularity(desiredCourses);
 						} else if (
 							student.grade === 9 &&
 							creditType === "akHistory" &&
@@ -1329,16 +1339,17 @@ function simulateSchoolYear() {
 								(course) => course.title === "Alaska History"
 							)
 						) {
-							selectedCourse = availableCourses.find(
+							const desiredCourses = availableCourses.filter(
 								(course) => course.title === "Alaska History"
 							);
+							selectedCourse = chooseRandCourseByPopularity(desiredCourses);
 						} else if (student.grade === 9 && creditType === "health") {
 							continue;
 						} else {
 							selectedCourse = chooseRandCourseByPopularity(availableCourses);
 						}
 						let creditsEarned = 0;
-						for (let i = 0; i < 4; i++) {
+						for (let i = 0; i < scheduleSystemNum; i++) {
 							const didPassQuarter = selectedCourse.passRate > Math.random();
 							if (didPassQuarter) {
 								creditsEarned += creditValue;
@@ -1358,7 +1369,7 @@ function simulateSchoolYear() {
 							grade: student.grade,
 						};
 						selectedCourse.students.push(studentRef);
-						if (creditsEarned >= 0.75) {
+						if (creditsEarned >= considerPass) {
 							selectedCourse.passCount++;
 						}
 					} else if (student.grade > 11) {
@@ -1408,7 +1419,7 @@ function simulateSchoolYear() {
 							grade: student.grade,
 						};
 						selectedCourse.students.push(studentRef);
-						if (creditsEarned >= 0.75) {
+						if (creditsEarned >= considerPass) {
 							selectedCourse.passCount++;
 						}
 					} else {
