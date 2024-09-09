@@ -1,11 +1,8 @@
 // TODO
-// create "paths" by adding props to courses for finding next course
-// add props to courses for making priority for certain grade levels
-// need to handle lab classes differently - try to select only if failures
-// need a way to handle in course props when class counts towards multiple credits - akhistory
-// when selecting a new class, cannot choose same class that has already been passed
-// need better/updated method of predicting if student will pass a class (currently - profiency * passRate = grade)
-// if students start taking band, they will likely continue taking band ...
+// same course logic is not working right
+// lab class selection is not working right
+// missing periods logic is not working right
+
 // simulate student switching courses middle of year
 // simulate student dropping out
 // simulate students entering district middle of year
@@ -22,8 +19,8 @@
 const creditValue = 0.25;
 const considerPass = 0.75;
 const scheduleSystemNum = 4;
-const maxIncomingFreshmen = 45;
-const minIncomingFreshmen = 5;
+const maxIncomingFreshmen = 1;
+const minIncomingFreshmen = 1;
 
 const allYearsReport = [];
 const creditRequirements = {
@@ -63,6 +60,7 @@ const scheduleCourses = [
 		title: "English V",
 		creditType: "english",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 1,
 		passRate: 0.95,
 		passCount: 0,
@@ -74,11 +72,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "English III",
 		creditType: "english",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 2,
 		passRate: 0.95,
 		passCount: 0,
@@ -90,11 +91,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "English IV",
+		gradePriority: null,
 	},
 	{
 		title: "English II",
 		creditType: "english",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 3,
 		passRate: 0.95,
 		passCount: 0,
@@ -106,11 +110,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "English III",
+		gradePriority: null,
 	},
 	{
 		title: "English I",
 		creditType: "english",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 4,
 		passRate: 0.95,
 		passCount: 0,
@@ -122,11 +129,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "English II",
+		gradePriority: 9,
 	},
 	{
 		title: "English II",
 		creditType: "english",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 5,
 		passRate: 0.95,
 		passCount: 0,
@@ -138,11 +148,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "English III",
+		gradePriority: null,
 	},
 	{
 		title: "English IV",
 		creditType: "english",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 6,
 		passRate: 0.95,
 		passCount: 0,
@@ -154,6 +167,8 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 
 	// MATH
@@ -161,6 +176,7 @@ const scheduleCourses = [
 		title: "Algebra I",
 		creditType: "math",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 1,
 		passRate: 0.95,
 		passCount: 0,
@@ -172,11 +188,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "Geometry",
+		gradePriority: null,
 	},
 	{
 		title: "PreCalc/Calc",
 		creditType: "math",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 2,
 		passRate: 0.95,
 		passCount: 0,
@@ -188,11 +207,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Geometry",
 		creditType: "math",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 3,
 		passRate: 0.95,
 		passCount: 0,
@@ -204,11 +226,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "Algebra II",
+		gradePriority: null,
 	},
 	{
 		title: "Algebra I",
 		creditType: "math",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 4,
 		passRate: 0.95,
 		passCount: 0,
@@ -220,11 +245,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "Geometry",
+		gradePriority: null,
 	},
 	{
 		title: "Algebra II",
 		creditType: "math",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 5,
 		passRate: 0.95,
 		passCount: 0,
@@ -236,11 +264,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "PreCalc/Calc",
+		gradePriority: null,
 	},
 	{
 		title: "Pre-Algebra",
 		creditType: "math",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 6,
 		passRate: 0.95,
 		passCount: 0,
@@ -252,6 +283,8 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "Algebra I",
+		gradePriority: null,
 	},
 
 	// SCIENCE
@@ -259,6 +292,7 @@ const scheduleCourses = [
 		title: "Science II",
 		creditType: "science",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 1,
 		passRate: 0.95,
 		passCount: 0,
@@ -270,11 +304,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "Science III",
+		gradePriority: null,
 	},
 	{
 		title: "Science III",
 		creditType: "science",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 2,
 		passRate: 0.95,
 		passCount: 0,
@@ -286,11 +323,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Science I",
 		creditType: "science",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 3,
 		passRate: 0.95,
 		passCount: 0,
@@ -302,11 +342,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "Science II",
+		gradePriority: null,
 	},
 	{
 		title: "Science I",
 		creditType: "science",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 4,
 		passRate: 0.95,
 		passCount: 0,
@@ -318,11 +361,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "Science II",
+		gradePriority: null,
 	},
 	{
 		title: "Science III",
 		creditType: "science",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 5,
 		passRate: 0.95,
 		passCount: 0,
@@ -334,11 +380,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Science II",
 		creditType: "science",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 6,
 		passRate: 0.95,
 		passCount: 0,
@@ -350,6 +399,8 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "Science III",
+		gradePriority: null,
 	},
 
 	// SOCIAL STUDIES
@@ -357,6 +408,7 @@ const scheduleCourses = [
 		title: "World History",
 		creditType: "social",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 1,
 		passRate: 0.95,
 		passCount: 0,
@@ -368,11 +420,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Alaska History",
 		creditType: "akHistory",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 2,
 		passRate: 0.95,
 		passCount: 0,
@@ -384,11 +439,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: 9,
 	},
 	{
 		title: "Government",
 		creditType: "government",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 3,
 		passRate: 0.95,
 		passCount: 0,
@@ -400,11 +458,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: 10,
 	},
 	{
 		title: "Government",
 		creditType: "government",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 4,
 		passRate: 0.95,
 		passCount: 0,
@@ -416,11 +477,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: 10,
 	},
 	{
 		title: "Alaska History",
 		creditType: "akHistory",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 5,
 		passRate: 0.95,
 		passCount: 0,
@@ -432,11 +496,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: 9,
 	},
 	{
 		title: "World History",
 		creditType: "social",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 6,
 		passRate: 0.95,
 		passCount: 0,
@@ -448,6 +515,8 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 
 	// LAB CLASSES
@@ -455,6 +524,7 @@ const scheduleCourses = [
 		title: "English Lab",
 		creditType: "english",
 		instructor: "Mr. X",
+		isRecovery: true,
 		period: 1,
 		passRate: 0.95,
 		passCount: 0,
@@ -466,11 +536,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "US History",
 		creditType: "social",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 3,
 		passRate: 0.95,
 		passCount: 0,
@@ -482,11 +555,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "English Lab",
 		creditType: "english",
 		instructor: "Mr. X",
+		isRecovery: true,
 		period: 4,
 		passRate: 0.95,
 		passCount: 0,
@@ -498,11 +574,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Math Lab",
 		creditType: "math",
 		instructor: "Mr. X",
+		isRecovery: true,
 		period: 5,
 		passRate: 0.95,
 		passCount: 0,
@@ -514,6 +593,8 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 
 	// PE
@@ -521,6 +602,7 @@ const scheduleCourses = [
 		title: "High School PE",
 		creditType: "physical",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 1,
 		passRate: 0.95,
 		passCount: 0,
@@ -532,11 +614,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "High School PE",
 		creditType: "physical",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 2,
 		passRate: 0.95,
 		passCount: 0,
@@ -548,11 +633,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "High School PE",
 		creditType: "physical",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 4,
 		passRate: 0.95,
 		passCount: 0,
@@ -564,6 +652,8 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 
 	// MATH/SCIENCE/HEALTH
@@ -571,6 +661,7 @@ const scheduleCourses = [
 		title: "Pre-Algebra",
 		creditType: "math",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 1,
 		passRate: 0.95,
 		passCount: 0,
@@ -582,11 +673,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "Algebra I",
+		gradePriority: null,
 	},
 	{
 		title: "Health",
 		creditType: "health",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 2,
 		passRate: 0.95,
 		passCount: 0,
@@ -598,11 +692,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: 10,
 	},
 	{
 		title: "Geometry",
 		creditType: "math",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 3,
 		passRate: 0.95,
 		passCount: 0,
@@ -614,11 +711,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "Algebra II",
+		gradePriority: null,
 	},
 	{
 		title: "Health",
 		creditType: "health",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 4,
 		passRate: 0.95,
 		passCount: 0,
@@ -630,11 +730,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: 10,
 	},
 	{
 		title: "Science Elective",
 		creditType: "science",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 6,
 		passRate: 0.95,
 		passCount: 0,
@@ -646,6 +749,8 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 
 	// ELECTIVES
@@ -653,6 +758,7 @@ const scheduleCourses = [
 		title: "Welding",
 		creditType: "vocEd",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 1,
 		passRate: 0.95,
 		passCount: 0,
@@ -664,11 +770,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Welding",
 		creditType: "vocEd",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 2,
 		passRate: 0.95,
 		passCount: 0,
@@ -680,11 +789,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Welding",
 		creditType: "vocEd",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 3,
 		passRate: 0.95,
 		passCount: 0,
@@ -696,11 +808,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Welding",
 		creditType: "vocEd",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 4,
 		passRate: 0.95,
 		passCount: 0,
@@ -712,11 +827,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Welding",
 		creditType: "vocEd",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 5,
 		passRate: 0.95,
 		passCount: 0,
@@ -728,11 +846,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Welding",
 		creditType: "vocEd",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 6,
 		passRate: 0.95,
 		passCount: 0,
@@ -744,11 +865,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Carpentry",
 		creditType: "vocEd",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 4,
 		passRate: 0.95,
 		passCount: 0,
@@ -760,11 +884,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Carpentry",
 		creditType: "vocEd",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 5,
 		passRate: 0.95,
 		passCount: 0,
@@ -776,11 +903,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Carpentry",
 		creditType: "vocEd",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 6,
 		passRate: 0.95,
 		passCount: 0,
@@ -792,11 +922,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Choir",
 		creditType: "elective",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 1,
 		passRate: 0.95,
 		passCount: 0,
@@ -808,11 +941,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Guitar",
 		creditType: "elective",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 4,
 		passRate: 0.95,
 		passCount: 0,
@@ -824,11 +960,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "World Drumming",
 		creditType: "elective",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 3,
 		passRate: 0.95,
 		passCount: 0,
@@ -840,11 +979,14 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: null,
+		gradePriority: null,
 	},
 	{
 		title: "Band",
 		creditType: "elective",
 		instructor: "Mr. X",
+		isRecovery: false,
 		period: 4,
 		passRate: 0.95,
 		passCount: 0,
@@ -856,6 +998,8 @@ const scheduleCourses = [
 			grade: null,
 		},
 		popularity: 1,
+		nextCourse: "Band",
+		gradePriority: null,
 	},
 ];
 
@@ -1194,14 +1338,18 @@ function getAvailableCourses(
 ) {
 	return curYearCourses.filter((course) => {
 		const courseIsNotFull = course.students.length < course.maxSize;
-		const notAlreadyInSchedule = !curSchedule.includes(course.title);
+		const notAlreadyInSchedule = !curSchedule.find(
+			(c) => c.title === course.title
+		);
 		const periodIsAvailable = getAvailablePeriods(curSchedule).includes(
 			course.period
 		);
+		const isNotHigherGradePriority =
+			!course.gradePriority || studentGrade >= course.gradePriority;
 		const isNewOrRepeatable =
 			course.isRepeatable ||
 			!courseHistoryMap[course] ||
-			courseHistoryMap[course] <= considerPass;
+			courseHistoryMap[course] < considerPass;
 
 		let meetsGradeRequirements = true;
 		let meetsCourseRequirements = true;
@@ -1219,6 +1367,7 @@ function getAvailableCourses(
 			courseIsNotFull &&
 			notAlreadyInSchedule &&
 			periodIsAvailable &&
+			isNotHigherGradePriority &&
 			isNewOrRepeatable &&
 			meetsAllRequirements
 		) {
@@ -1284,6 +1433,73 @@ function checkDidGraduate(studentCredits) {
 	return meetsRequirements;
 }
 
+function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
+	if (!availableCourses.length) {
+		return null;
+	}
+
+	const priorityCourses = availableCourses.filter(
+		(course) => course.gradePriority && course.gradePriority === studentGrade
+	);
+	if (priorityCourses.length) {
+		return chooseRandCourseByPopularity(priorityCourses);
+	}
+
+	const failedCredits = [];
+	for (const course of prevYearCourseHistory) {
+		if (course.creditsEarned < considerPass) {
+			failedCredits.push(course.creditType);
+		}
+	}
+	if (failedCredits.length) {
+		const recoveryCourses = availableCourses.filter(
+			(course) => course.isRecovery && failedCredits.includes(course.creditType)
+		);
+		if (recoveryCourses.length) {
+			return chooseRandCourseByPopularity(recoveryCourses);
+		}
+	}
+
+	const pathwayCourses = prevYearCourseHistory.filter(
+		(course) => course.nextCourse
+	);
+	if (pathwayCourses.length) {
+		const nextCourses = availableCourses.filter((course) =>
+			pathwayCourses.includes(course.title)
+		);
+		return chooseRandCourseByPopularity(nextCourses);
+	}
+
+	return chooseRandCourseByPopularity(availableCourses);
+}
+
+function awardCreditsForYear(course) {
+	let creditsEarned = 0;
+	for (let i = 0; i < scheduleSystemNum; i++) {
+		const didPass = course.passRate > Math.random();
+		creditsEarned += didPass ? creditValue : 0;
+	}
+	return creditsEarned;
+}
+
+function getCourseRef(selectedCourse, creditsEarned) {
+	return {
+		title: selectedCourse.title,
+		instructor: selectedCourse.instructor,
+		period: selectedCourse.period,
+		creditType: selectedCourse.creditType,
+		creditsEarned: creditsEarned,
+	};
+}
+
+function getStudentRef(student) {
+	return {
+		id: student.id,
+		name: student.name,
+		grade: student.grade,
+	};
+}
+
 function simulateSchoolYear() {
 	// Create random number of new 9th grade students (80 - 140);
 	const randNumNewStudents = Math.floor(
@@ -1321,53 +1537,17 @@ function simulateSchoolYear() {
 						curCreditTypeCourses
 					);
 					if (availableCourses.length) {
-						// Handle special cases for Freshmen going to some specific courses
-						let selectedCourse;
-						if (
-							student.grade === 9 &&
-							creditType === "english" &&
-							availableCourses.find((course) => course.title === "English I")
-						) {
-							const desiredCourses = availableCourses.filter(
-								(course) => course.title === "English I"
-							);
-							selectedCourse = chooseRandCourseByPopularity(desiredCourses);
-						} else if (
-							student.grade === 9 &&
-							creditType === "akHistory" &&
-							availableCourses.find(
-								(course) => course.title === "Alaska History"
-							)
-						) {
-							const desiredCourses = availableCourses.filter(
-								(course) => course.title === "Alaska History"
-							);
-							selectedCourse = chooseRandCourseByPopularity(desiredCourses);
-						} else if (student.grade === 9 && creditType === "health") {
-							continue;
-						} else {
-							selectedCourse = chooseRandCourseByPopularity(availableCourses);
-						}
-						let creditsEarned = 0;
-						for (let i = 0; i < scheduleSystemNum; i++) {
-							const didPassQuarter = selectedCourse.passRate > Math.random();
-							if (didPassQuarter) {
-								creditsEarned += creditValue;
-							}
-						}
-						const courseRef = {
-							title: selectedCourse.title,
-							instructor: selectedCourse.instructor,
-							period: selectedCourse.period,
-							creditType: selectedCourse.creditType,
-							creditsEarned: creditsEarned,
-						};
+						const selectedCourse = chooseCourse(
+							availableCourses,
+							student.grade,
+							student.courseHistory[student.grade - 1]
+						);
+						const creditsEarned = awardCreditsForYear(selectedCourse);
+
+						const courseRef = getCourseRef(selectedCourse, creditsEarned);
 						studentSchedule.push(courseRef);
-						const studentRef = {
-							id: student.id,
-							name: student.name,
-							grade: student.grade,
-						};
+
+						const studentRef = getStudentRef(student);
 						selectedCourse.students.push(studentRef);
 						if (creditsEarned >= considerPass) {
 							selectedCourse.passCount++;
@@ -1375,7 +1555,7 @@ function simulateSchoolYear() {
 					} else if (student.grade > 11) {
 						newYear.issues.push({
 							student: student,
-							type: "creditRequirementsCourseNotFound",
+							type: "requirements",
 							message: `No courses found for senior who needed more ${creditType} credits`,
 						});
 					}
@@ -1396,28 +1576,17 @@ function simulateSchoolYear() {
 						curPeriodCourses
 					);
 					if (availableCourses.length) {
-						const selectedCourse =
-							chooseRandCourseByPopularity(availableCourses);
-						let creditsEarned = 0;
-						for (let i = 0; i < 4; i++) {
-							const didPassQuarter = selectedCourse.passRate > Math.random();
-							if (didPassQuarter) {
-								creditsEarned += creditValue;
-							}
-						}
-						const studentCourseRef = {
-							title: selectedCourse.title,
-							instructor: selectedCourse.instructor,
-							period: selectedCourse.period,
-							creditType: selectedCourse.creditType,
-							creditsEarned: creditsEarned,
-						};
-						studentSchedule.push(studentCourseRef);
-						const studentRef = {
-							id: student.id,
-							name: student.name,
-							grade: student.grade,
-						};
+						const selectedCourse = chooseCourse(
+							availableCourses,
+							student.grade,
+							student.courseHistory[student.grade - 1]
+						);
+						const creditsEarned = awardCreditsForYear(selectedCourse);
+
+						const courseRef = getCourseRef(selectedCourse, creditsEarned);
+						studentSchedule.push(courseRef);
+
+						const studentRef = getStudentRef(student);
 						selectedCourse.students.push(studentRef);
 						if (creditsEarned >= considerPass) {
 							selectedCourse.passCount++;
@@ -1425,8 +1594,8 @@ function simulateSchoolYear() {
 					} else {
 						newYear.issues.push({
 							student: student,
-							type: "emptyPeriodCourseNotFound",
-							message: `No courses found for ${student.grade}th student who needed a class for ${period} period`,
+							type: "periods",
+							message: `No courses found for ${student.grade}th grade student who needed a class for period ${period}`,
 						});
 					}
 				}
@@ -1456,7 +1625,7 @@ function simulateSchoolYear() {
 	allYearsReport.push(newYear);
 }
 
-for (let i = 0; i < 5; i++) {
+for (let i = 0; i < 10; i++) {
 	simulateSchoolYear();
 }
 
