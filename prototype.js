@@ -1,4 +1,5 @@
 // TODO
+// add reporting
 // same course logic is not working right
 // lab class selection is not working right
 // missing periods logic is not working right
@@ -284,7 +285,7 @@ const scheduleCourses = [
 		},
 		popularity: 1,
 		nextCourse: "Algebra I",
-		gradePriority: null,
+		gradePriority: 9,
 	},
 
 	// SCIENCE
@@ -674,7 +675,7 @@ const scheduleCourses = [
 		},
 		popularity: 1,
 		nextCourse: "Algebra I",
-		gradePriority: null,
+		gradePriority: 9,
 	},
 	{
 		title: "Health",
@@ -1348,7 +1349,7 @@ function getAvailableCourses(
 			!course.gradePriority || studentGrade >= course.gradePriority;
 		const isNewOrRepeatable =
 			course.isRepeatable ||
-			!courseHistoryMap[course] ||
+			!Object.hasOwn(courseHistoryMap, course) ||
 			courseHistoryMap[course] < considerPass;
 
 		let meetsGradeRequirements = true;
@@ -1433,11 +1434,17 @@ function checkDidGraduate(studentCredits) {
 	return meetsRequirements;
 }
 
-function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
+function chooseCourse(
+	availableCourses,
+	studentGrade,
+	prevYearCourseHistory,
+	curSchedule
+) {
 	if (!availableCourses.length) {
 		return null;
 	}
 
+	// Choose a course first if it is marked as a priority (example = AK History for 9th graders)
 	const priorityCourses = availableCourses.filter(
 		(course) => course.gradePriority && course.gradePriority === studentGrade
 	);
@@ -1445,6 +1452,7 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 		return chooseRandCourseByPopularity(priorityCourses);
 	}
 
+	// Choose recovery courses if needed for credits that are missing from failed courses
 	const failedCredits = [];
 	for (const course of prevYearCourseHistory) {
 		if (course.creditsEarned < considerPass) {
@@ -1460,16 +1468,40 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 		}
 	}
 
-	const pathwayCourses = prevYearCourseHistory.filter(
-		(course) => course.nextCourse
-	);
-	if (pathwayCourses.length) {
+	// Next, pick a course based on current pathways (Example:  English I -> English II)
+	const pathwayCourseTitles = prevYearCourseHistory
+		.filter((course) => course.nextCourse)
+		.map((course) => course.nextCourse);
+	if (pathwayCourseTitles.length) {
 		const nextCourses = availableCourses.filter((course) =>
-			pathwayCourses.includes(course.title)
+			pathwayCourseTitles.includes(course.title)
 		);
-		return chooseRandCourseByPopularity(nextCourses);
+		if (nextCourses.length) {
+			return chooseRandCourseByPopularity(nextCourses);
+		}
 	}
 
+	// Ignore classes from special credit logic cases
+	// Example: Already taking AK History this year, so do not also take another social studies course
+	// (even though AK History isn't technically a social studies credit type)
+	const creditsToIgnore = [];
+	for (const course of curSchedule) {
+		if (course.creditType in creditExtraLogic) {
+			creditsToIgnore.push(creditExtraLogic[course.creditType]);
+		}
+	}
+	if (creditsToIgnore.length) {
+		const remainingCourses = availableCourses.filter(
+			(course) => !creditsToIgnore.includes(course.creditType)
+		);
+		if (remainingCourses.length) {
+			console.log("WERE AVAILABLE:", availableCourses);
+			console.log("REMAINING:", remainingCourses);
+			chooseRandCourseByPopularity(remainingCourses);
+		}
+	}
+
+	// Otherwise, if no cases are met, return a random course based on popularity
 	return chooseRandCourseByPopularity(availableCourses);
 }
 
@@ -1489,6 +1521,7 @@ function getCourseRef(selectedCourse, creditsEarned) {
 		period: selectedCourse.period,
 		creditType: selectedCourse.creditType,
 		creditsEarned: creditsEarned,
+		nextCourse: selectedCourse.nextCourse,
 	};
 }
 
@@ -1540,7 +1573,8 @@ function simulateSchoolYear() {
 						const selectedCourse = chooseCourse(
 							availableCourses,
 							student.grade,
-							student.courseHistory[student.grade - 1]
+							student.courseHistory[student.grade - 1],
+							studentSchedule
 						);
 						const creditsEarned = awardCreditsForYear(selectedCourse);
 
@@ -1579,7 +1613,8 @@ function simulateSchoolYear() {
 						const selectedCourse = chooseCourse(
 							availableCourses,
 							student.grade,
-							student.courseHistory[student.grade - 1]
+							student.courseHistory[student.grade - 1],
+							studentSchedule
 						);
 						const creditsEarned = awardCreditsForYear(selectedCourse);
 
