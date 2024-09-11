@@ -1,5 +1,6 @@
 // TODO
 // add reporting
+// same sourse creditType logic is not working right
 // same course logic is not working right
 // lab class selection is not working right
 // missing periods logic is not working right
@@ -24,31 +25,26 @@ const maxIncomingFreshmen = 1;
 const minIncomingFreshmen = 1;
 
 const allYearsReport = [];
-const creditRequirements = {
-	english: 4,
-	math: 3,
-	science: 3,
-	social: 3,
-	physical: 1,
-	health: 1,
-	vocEd: 2,
-	akHistory: 1,
-	government: 1,
-	elective: 5,
+const courseRequirements = ["Alaska History", "Government"];
+const graduationRequirements = {
+	credits: {
+		english: 4,
+		math: 3,
+		science: 3,
+		social: 3,
+		physical: 1,
+		health: 1,
+		vocEd: 2,
+		elective: 5,
+	},
+	courses: {
+		"Alaska History": 1,
+		Government: 1,
+	},
 };
+const orderedCoreCredits = ["english", "math", "science", "social"];
 
-const orderedCredits = [
-	"akHistory",
-	"government",
-	"english",
-	"math",
-	"science",
-	"social",
-	"health",
-	"vocEd",
-	"physical",
-	"elective",
-];
+const orderedSecondaryCredits = ["health", "vocEd", "physical", "elective"];
 
 const creditExtraLogic = {
 	akHistory: "social",
@@ -426,7 +422,7 @@ const scheduleCourses = [
 	},
 	{
 		title: "Alaska History",
-		creditType: "akHistory",
+		creditType: "social",
 		instructor: "Mr. X",
 		isRecovery: false,
 		period: 2,
@@ -483,7 +479,7 @@ const scheduleCourses = [
 	},
 	{
 		title: "Alaska History",
-		creditType: "akHistory",
+		creditType: "social",
 		instructor: "Mr. X",
 		isRecovery: false,
 		period: 5,
@@ -1265,17 +1261,21 @@ function generateStudent() {
 		proficiency: Math.round(Math.random() * (100 - 50) + 50),
 		didGraduate: false,
 		didDropout: false,
-		credits: {
-			english: 0,
-			math: 0,
-			science: 0,
-			social: 0,
-			physical: 0,
-			health: 0,
-			vocEd: 0,
-			akHistory: 0,
-			government: 0,
-			elective: 0,
+		requirements: {
+			credits: {
+				english: 0,
+				math: 0,
+				science: 0,
+				social: 0,
+				physical: 0,
+				health: 0,
+				vocEd: 0,
+				elective: 0,
+			},
+			courses: {
+				"Alaska History": 0,
+				Government: 0,
+			},
 		},
 		courseHistory: {
 			8: [],
@@ -1347,10 +1347,11 @@ function getAvailableCourses(
 		);
 		const isNotHigherGradePriority =
 			!course.gradePriority || studentGrade >= course.gradePriority;
+
 		const isNewOrRepeatable =
 			course.isRepeatable ||
-			!Object.hasOwn(courseHistoryMap, course) ||
-			courseHistoryMap[course] < considerPass;
+			!Object.hasOwn(courseHistoryMap, course.title) ||
+			courseHistoryMap[course.title] < considerPass;
 
 		let meetsGradeRequirements = true;
 		let meetsCourseRequirements = true;
@@ -1398,48 +1399,56 @@ function chooseRandCourseByPopularity(courses) {
 	return chooseList[randNdx];
 }
 
-function assignCredits(studentSchedule, curCredits) {
+function assignCredits(studentSchedule, curRequirements) {
 	for (const course of studentSchedule) {
 		let curCreditVal = course.creditsEarned;
 		while (curCreditVal > 0) {
+			// Assign credits to main creditType or electives if they already have enough
 			if (
-				curCredits[course.creditType] < creditRequirements[course.creditType]
+				curRequirements.credits[course.creditType] <
+				graduationRequirements.credits[course.creditType]
 			) {
-				curCredits[course.creditType] += creditValue;
-				if (creditExtraLogic) {
-					const creditExtraType = creditExtraLogic[course.creditType];
-					if (
-						creditExtraType &&
-						curCredits[creditExtraType] < creditRequirements[creditExtraType]
-					) {
-						curCredits[creditExtraType] += creditValue;
-					}
-				}
+				curRequirements.credits[course.creditType] += creditValue;
 			} else {
-				curCredits.elective += creditValue;
+				curRequirements.credits.elective += creditValue;
+			}
+
+			// Assign credits for the special courses required for graduation (AK History and Government)
+			if (course.title in graduationRequirements.courses) {
+				if (
+					curRequirements.courses[course.title] <
+					graduationRequirements.courses[course.title]
+				) {
+					curRequirements.courses[course.title] += creditValue;
+				}
 			}
 			curCreditVal -= creditValue;
 		}
 	}
-	return curCredits;
+	return curRequirements;
 }
 
-function checkDidGraduate(studentCredits) {
-	let meetsRequirements = true;
-	for (const [creditType, creditValue] of Object.entries(studentCredits)) {
-		if (creditRequirements[creditType] > creditValue) {
-			meetsRequirements = false;
+function checkDidGraduate(studentRequirements) {
+	let meetsCreditRequirements = true;
+	for (const [creditType, creditValue] of Object.entries(
+		studentRequirements.credits
+	)) {
+		if (graduationRequirements.credits[creditType] > creditValue) {
+			meetsCreditRequirements = false;
 		}
 	}
-	return meetsRequirements;
+	let meetsCourseRequirements = true;
+	for (const [courseName, creditValue] of Object.entries(
+		studentRequirements.courses
+	)) {
+		if (graduationRequirements.courses[courseName] > creditValue) {
+			meetsCourseRequirements = false;
+		}
+	}
+	return meetsCreditRequirements && meetsCourseRequirements;
 }
 
-function chooseCourse(
-	availableCourses,
-	studentGrade,
-	prevYearCourseHistory,
-	curSchedule
-) {
+function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 	if (!availableCourses.length) {
 		return null;
 	}
@@ -1481,26 +1490,6 @@ function chooseCourse(
 		}
 	}
 
-	// Ignore classes from special credit logic cases
-	// Example: Already taking AK History this year, so do not also take another social studies course
-	// (even though AK History isn't technically a social studies credit type)
-	const creditsToIgnore = [];
-	for (const course of curSchedule) {
-		if (course.creditType in creditExtraLogic) {
-			creditsToIgnore.push(creditExtraLogic[course.creditType]);
-		}
-	}
-	if (creditsToIgnore.length) {
-		const remainingCourses = availableCourses.filter(
-			(course) => !creditsToIgnore.includes(course.creditType)
-		);
-		if (remainingCourses.length) {
-			console.log("WERE AVAILABLE:", availableCourses);
-			console.log("REMAINING:", remainingCourses);
-			chooseRandCourseByPopularity(remainingCourses);
-		}
-	}
-
 	// Otherwise, if no cases are met, return a random course based on popularity
 	return chooseRandCourseByPopularity(availableCourses);
 }
@@ -1534,14 +1523,11 @@ function getStudentRef(student) {
 }
 
 function simulateSchoolYear() {
-	// Create random number of new 9th grade students (80 - 140);
 	const randNumNewStudents = Math.floor(
 		Math.random() * (maxIncomingFreshmen - minIncomingFreshmen) +
 			minIncomingFreshmen
 	);
 	const newStudents = createStudents(randNumNewStudents);
-
-	// Create new 'year' object with courses and students
 	const newYear = {
 		id: generateId(),
 		simYear: allYearsReport.length + 1,
@@ -1557,17 +1543,22 @@ function simulateSchoolYear() {
 			const courseHistoryMap = getCourseHistoryMap(student);
 			const studentSchedule = [];
 
-			// First, attempt to enroll based on credit type rankings
-			for (const creditType of orderedCredits) {
-				if (student.credits[creditType] < creditRequirements[creditType]) {
-					const curCreditTypeCourses = newYear.courses.filter(
+			// First, attempt to enroll based on core credits
+			// NEED TO FIND A WAY TO REMOVE SOCIAL STUDIES FOR 9TH GRADERS TAKING AK HISTORY
+			for (const creditType of orderedCoreCredits) {
+				if (
+					student.requirements.credits[creditType] <
+					graduationRequirements.credits[creditType]
+				) {
+					const curCreditCourses = newYear.courses.filter(
 						(course) => course.creditType === creditType
 					);
+
 					const availableCourses = getAvailableCourses(
 						courseHistoryMap,
 						student.grade,
 						studentSchedule,
-						curCreditTypeCourses
+						curCreditCourses
 					);
 					if (availableCourses.length) {
 						const selectedCourse = chooseCourse(
@@ -1596,7 +1587,94 @@ function simulateSchoolYear() {
 				}
 			}
 
-			// Then, enroll in courses for any remaining empty periods
+			// Then enroll based on required courses
+			for (const courseTitle of Object.keys(graduationRequirements.courses)) {
+				if (
+					student.requirements.courses[courseTitle] <
+					graduationRequirements.courses[courseTitle]
+				) {
+					const curRequiredCourses = newYear.courses.filter(
+						(course) => course.title === courseTitle
+					);
+					const availableCourses = getAvailableCourses(
+						courseHistoryMap,
+						student.grade,
+						studentSchedule,
+						curRequiredCourses
+					);
+					if (availableCourses.length) {
+						const selectedCourse = chooseCourse(
+							availableCourses,
+							student.grade,
+							student.courseHistory[student.grade - 1],
+							studentSchedule
+						);
+						const creditsEarned = awardCreditsForYear(selectedCourse);
+
+						const courseRef = getCourseRef(selectedCourse, creditsEarned);
+						studentSchedule.push(courseRef);
+
+						const studentRef = getStudentRef(student);
+						selectedCourse.students.push(studentRef);
+						if (creditsEarned >= considerPass) {
+							selectedCourse.passCount++;
+						}
+
+						// Need to update this issue, since not really an issue if course is not priority yet
+					} else if (student.grade > 11) {
+						newYear.issues.push({
+							student: student,
+							type: "requirements",
+							message: `No courses found for senior who needed ${courseTitle} course`,
+						});
+					}
+				}
+			}
+
+			// Then, enroll based on secondary credit types
+			for (const creditType of orderedSecondaryCredits) {
+				if (
+					student.requirements.credits[creditType] <
+					graduationRequirements.credits[creditType]
+				) {
+					const curCreditCourses = newYear.courses.filter(
+						(course) => course.creditType === creditType
+					);
+
+					const availableCourses = getAvailableCourses(
+						courseHistoryMap,
+						student.grade,
+						studentSchedule,
+						curCreditCourses
+					);
+					if (availableCourses.length) {
+						const selectedCourse = chooseCourse(
+							availableCourses,
+							student.grade,
+							student.courseHistory[student.grade - 1],
+							studentSchedule
+						);
+						const creditsEarned = awardCreditsForYear(selectedCourse);
+
+						const courseRef = getCourseRef(selectedCourse, creditsEarned);
+						studentSchedule.push(courseRef);
+
+						const studentRef = getStudentRef(student);
+						selectedCourse.students.push(studentRef);
+						if (creditsEarned >= considerPass) {
+							selectedCourse.passCount++;
+						}
+					} else if (student.grade > 11) {
+						newYear.issues.push({
+							student: student,
+							type: "requirements",
+							message: `No courses found for senior who needed more ${creditType} credits`,
+						});
+					}
+				}
+			}
+
+			// Then enroll in courses for any remaining empty periods
 			const remainingPeriods = getAvailablePeriods(studentSchedule);
 			if (remainingPeriods.length) {
 				for (const period of remainingPeriods) {
@@ -1641,15 +1719,15 @@ function simulateSchoolYear() {
 				(a, b) => a.period - b.period
 			);
 			student.courseHistory[student.grade] = orderedSchedule;
-			const updatedStudentCredits = assignCredits(
+			const updatedStudentRequirements = assignCredits(
 				orderedSchedule,
-				student.credits
+				student.requirements
 			);
-			student.credits = updatedStudentCredits;
+			student.requirements = updatedStudentRequirements;
 		}
 	}
 	for (const student of newYear.students) {
-		student.didGraduate = checkDidGraduate(student.credits);
+		student.didGraduate = checkDidGraduate(student.requirements);
 		if (!student.didGraduate && student.grade > 12) {
 			student.didDropout = true;
 		}
