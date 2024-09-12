@@ -19,10 +19,11 @@
 
 // Global Settings Variables
 const creditValue = 0.25;
-const considerPass = 0.75;
+const minConsiderPass = 0.75;
+const fullPass = 1;
 const scheduleSystemNum = 4;
-const maxIncomingFreshmen = 1;
-const minIncomingFreshmen = 1;
+const maxIncomingFreshmen = 15;
+const minIncomingFreshmen = 5;
 
 const allYearsReport = [];
 const courseRequirements = ["Alaska History", "Government"];
@@ -33,13 +34,13 @@ const graduationRequirements = {
 		science: 3,
 		social: 3,
 		physical: 1,
-		health: 1,
+		health: minConsiderPass,
 		vocEd: 2,
 		elective: 5,
 	},
 	courses: {
-		"Alaska History": 1,
-		Government: 1,
+		"Alaska History": minConsiderPass,
+		Government: minConsiderPass,
 	},
 };
 const orderedCoreCredits = ["english", "math", "science", "social"];
@@ -441,7 +442,7 @@ const scheduleCourses = [
 	},
 	{
 		title: "Government",
-		creditType: "government",
+		creditType: "social",
 		instructor: "Mr. X",
 		isRecovery: false,
 		period: 3,
@@ -460,7 +461,7 @@ const scheduleCourses = [
 	},
 	{
 		title: "Government",
-		creditType: "government",
+		creditType: "social",
 		instructor: "Mr. X",
 		isRecovery: false,
 		period: 4,
@@ -1350,8 +1351,8 @@ function getAvailableCourses(
 
 		const isNewOrRepeatable =
 			course.isRepeatable ||
-			!Object.hasOwn(courseHistoryMap, course.title) ||
-			courseHistoryMap[course.title] < considerPass;
+			!courseHistoryMap[course.title] ||
+			courseHistoryMap[course.title] < fullPass;
 
 		let meetsGradeRequirements = true;
 		let meetsCourseRequirements = true;
@@ -1360,7 +1361,7 @@ function getAvailableCourses(
 		}
 		if (course.requirements.courses) {
 			meetsCourseRequirements = course.requirements.courses.every(
-				(courseTitle) => courseHistoryMap[courseTitle] >= considerPass
+				(courseTitle) => courseHistoryMap[courseTitle] >= minConsiderPass
 			);
 		}
 		const meetsAllRequirements =
@@ -1464,7 +1465,7 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 	// Choose recovery courses if needed for credits that are missing from failed courses
 	const failedCredits = [];
 	for (const course of prevYearCourseHistory) {
-		if (course.creditsEarned < considerPass) {
+		if (course.creditsEarned < fullPass) {
 			failedCredits.push(course.creditType);
 		}
 	}
@@ -1534,6 +1535,20 @@ function simulateSchoolYear() {
 		courses: [...scheduleCourses],
 		students: [...getAllActiveStudents(), ...newStudents],
 		issues: [],
+		metrics: {
+			numFreshmen: null,
+			numSophomore: null,
+			numJunior: null,
+			numSenior: null,
+			numSuperSenior: null,
+			numGraduates: null,
+			numDropouts: null,
+			numStudentsWithEmptyBlocks: null,
+			numCasesSeniorCouldNotFindNeededCourse: null,
+			totalStudents: null,
+			avgCoreClassSize: null,
+			avgSecondaryClassSize: null,
+		},
 	};
 
 	// Simulate school year enrollment for each student
@@ -1544,7 +1559,6 @@ function simulateSchoolYear() {
 			const studentSchedule = [];
 
 			// First, attempt to enroll based on core credits
-			// NEED TO FIND A WAY TO REMOVE SOCIAL STUDIES FOR 9TH GRADERS TAKING AK HISTORY
 			for (const creditType of orderedCoreCredits) {
 				if (
 					student.requirements.credits[creditType] <
@@ -1574,14 +1588,14 @@ function simulateSchoolYear() {
 
 						const studentRef = getStudentRef(student);
 						selectedCourse.students.push(studentRef);
-						if (creditsEarned >= considerPass) {
+						if (creditsEarned >= minConsiderPass) {
 							selectedCourse.passCount++;
 						}
 					} else if (student.grade > 11) {
 						newYear.issues.push({
 							student: student,
-							type: "requirements",
-							message: `No courses found for senior who needed more ${creditType} credits`,
+							type: "credits",
+							message: `Senior could not find ${creditType} credits`,
 						});
 					}
 				}
@@ -1616,7 +1630,7 @@ function simulateSchoolYear() {
 
 						const studentRef = getStudentRef(student);
 						selectedCourse.students.push(studentRef);
-						if (creditsEarned >= considerPass) {
+						if (creditsEarned >= minConsiderPass) {
 							selectedCourse.passCount++;
 						}
 
@@ -1624,8 +1638,8 @@ function simulateSchoolYear() {
 					} else if (student.grade > 11) {
 						newYear.issues.push({
 							student: student,
-							type: "requirements",
-							message: `No courses found for senior who needed ${courseTitle} course`,
+							type: "requiredCourse",
+							message: `Senior could not find ${courseTitle} course`,
 						});
 					}
 				}
@@ -1661,14 +1675,14 @@ function simulateSchoolYear() {
 
 						const studentRef = getStudentRef(student);
 						selectedCourse.students.push(studentRef);
-						if (creditsEarned >= considerPass) {
+						if (creditsEarned >= minConsiderPass) {
 							selectedCourse.passCount++;
 						}
 					} else if (student.grade > 11) {
 						newYear.issues.push({
 							student: student,
-							type: "requirements",
-							message: `No courses found for senior who needed more ${creditType} credits`,
+							type: "credits",
+							message: `Senior could not find ${creditType} credits`,
 						});
 					}
 				}
@@ -1676,7 +1690,7 @@ function simulateSchoolYear() {
 
 			// Then enroll in courses for any remaining empty periods
 			const remainingPeriods = getAvailablePeriods(studentSchedule);
-			if (remainingPeriods.length) {
+			if (remainingPeriods.length && student.grade < 13) {
 				for (const period of remainingPeriods) {
 					const curPeriodCourses = newYear.courses.filter(
 						(course) => course.period === period
@@ -1701,14 +1715,14 @@ function simulateSchoolYear() {
 
 						const studentRef = getStudentRef(student);
 						selectedCourse.students.push(studentRef);
-						if (creditsEarned >= considerPass) {
+						if (creditsEarned >= minConsiderPass) {
 							selectedCourse.passCount++;
 						}
-					} else {
+					} else if (student.grade < 12) {
 						newYear.issues.push({
 							student: student,
-							type: "periods",
-							message: `No courses found for ${student.grade}th grade student who needed a class for period ${period}`,
+							type: "empty",
+							message: `Empty ${period}th period block for ${student.grade}th grader`,
 						});
 					}
 				}
@@ -1731,6 +1745,47 @@ function simulateSchoolYear() {
 		if (!student.didGraduate && student.grade > 12) {
 			student.didDropout = true;
 		}
+	}
+	const coreCourses = scheduleCourses.filter(
+		(course) =>
+			orderedCoreCredits.includes(course.creditType) ||
+			course.title in graduationRequirements.courses
+	);
+	const secondaryCourses = scheduleCourses.filter((course) =>
+		orderedSecondaryCredits.includes(course.creditType)
+	);
+	const newMetrics = {
+		numFreshmen: newYear.students.filter((student) => student.grade === 9)
+			.length,
+		numSophomore: newYear.students.filter((student) => student.grade === 10)
+			.length,
+		numJunior: newYear.students.filter((student) => student.grade === 11)
+			.length,
+		numSenior: newYear.students.filter((student) => student.grade === 12)
+			.length,
+		numSuperSenior: newYear.students.filter((student) => student.grade === 13)
+			.length,
+		totalStudents: newYear.students.length,
+		numGraduates: newYear.students.filter((student) => student.didGraduate)
+			.length,
+		numDropouts: newYear.students.filter((student) => student.didDropout)
+			.length,
+		numStudentsWithEmptyBlocks: newYear.students.filter(
+			(student) =>
+				student.courseHistory[student.grade].length < 6 && student.grade < 13
+		).length,
+		numCasesSeniorCouldNotFindNeededCourse: newYear.issues.filter(
+			(issue) => issue.type === "credits" && issue.student.grade > 11
+		).length,
+		// avgCoreClassSize:
+		// 	coreCourses.reduce((a, b) => a.students.length + b.students.length) /
+		// 	coreCourses.length,
+		// avgSecondaryClassSize:
+		// 	secondaryCourses.reduce((a, b) => a.students.length + b.students.length) /
+		// 	secondaryCourses.length,
+	};
+	newYear.metrics = newMetrics;
+	for (const student of newYear.students) {
 		if (!student.didGraduate && !student.didDropout) {
 			student.grade++;
 		}
