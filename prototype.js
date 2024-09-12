@@ -1,29 +1,28 @@
-// TODO
-// add reporting
-// same sourse creditType logic is not working right
-// same course logic is not working right
-// lab class selection is not working right
-// missing periods logic is not working right
+// CURRENT ISSUES
+// seeing student lists with no freshmen/sophomores
 
+// ADDITIONAL FEATURES TO ADD
 // simulate student switching courses middle of year
-// simulate student dropping out
 // simulate students entering district middle of year
-// simulate some students getting pe credit through a sport
 
-// METRICS TO REPORT LATER:
+// MORE METRICS TO REPORT:
 // average class sizes - overall, by period, by teacher/subject
-// how many kids could not graduate by senior year
-// how many kids total in each class-year
 // where are the bottlenecks ...
 // measure by looking at the same course class sizes in the same schedule
 
 // Global Settings Variables
 const creditValue = 0.25;
+const sportCreditValue = 0.5;
 const minConsiderPass = 0.75;
 const fullPass = 1;
+
 const scheduleSystemNum = 4;
-const maxIncomingFreshmen = 15;
+const maxIncomingFreshmen = 10;
 const minIncomingFreshmen = 5;
+
+const chanceOfStartingEnglishCredit = 0.1;
+const chanceOfStartingMathCredit = 0.1;
+const chanceOfEarningSportCredit = 0.4;
 
 const allYearsReport = [];
 const courseRequirements = ["Alaska History", "Government"];
@@ -1262,6 +1261,7 @@ function generateStudent() {
 		proficiency: Math.round(Math.random() * (100 - 50) + 50),
 		didGraduate: false,
 		didDropout: false,
+		earnedSport: false,
 		requirements: {
 			credits: {
 				english: 0,
@@ -1293,6 +1293,24 @@ function createStudents(numOfStudents = 25) {
 	const students = [];
 	for (let i = 0; i < numOfStudents; i++) {
 		const newStudent = generateStudent();
+		const randEnglishCreditChance = Math.random();
+		const randMathCreditChance = Math.random();
+		if (randEnglishCreditChance < chanceOfStartingEnglishCredit) {
+			newStudent.requirements.credits["english"] = 1;
+			newStudent.courseHistory[8].push({
+				title: "English I",
+				creditType: "english",
+				nextCourse: "English II",
+			});
+		}
+		if (randMathCreditChance < chanceOfStartingMathCredit) {
+			newStudent.requirements.credits["math"] = 1;
+			newStudent.courseHistory[8].push({
+				title: "Pre-Algebra",
+				creditType: "math",
+				nextCourse: "Algebra I",
+			});
+		}
 		students.push(newStudent);
 	}
 	return students;
@@ -1738,6 +1756,15 @@ function simulateSchoolYear() {
 				student.requirements
 			);
 			student.requirements = updatedStudentRequirements;
+
+			// Add 0.5 PE credits for playing a sport based on chance
+			const randSportChance = Math.random();
+			if (
+				randSportChance < chanceOfEarningSportCredit &&
+				!student.earnedSport
+			) {
+				student.requirements.credits["physical"] += sportCreditValue;
+			}
 		}
 	}
 	for (const student of newYear.students) {
@@ -1751,9 +1778,17 @@ function simulateSchoolYear() {
 			orderedCoreCredits.includes(course.creditType) ||
 			course.title in graduationRequirements.courses
 	);
+	let totalCoreClassSizes = 0;
+	for (const course of coreCourses) {
+		totalCoreClassSizes += course.students.length;
+	}
 	const secondaryCourses = scheduleCourses.filter((course) =>
 		orderedSecondaryCredits.includes(course.creditType)
 	);
+	let totalSecondaryClassSizes = 0;
+	for (const course of coreCourses) {
+		totalSecondaryClassSizes += course.students.length;
+	}
 	const newMetrics = {
 		numFreshmen: newYear.students.filter((student) => student.grade === 9)
 			.length,
@@ -1777,12 +1812,8 @@ function simulateSchoolYear() {
 		numCasesSeniorCouldNotFindNeededCourse: newYear.issues.filter(
 			(issue) => issue.type === "credits" && issue.student.grade > 11
 		).length,
-		// avgCoreClassSize:
-		// 	coreCourses.reduce((a, b) => a.students.length + b.students.length) /
-		// 	coreCourses.length,
-		// avgSecondaryClassSize:
-		// 	secondaryCourses.reduce((a, b) => a.students.length + b.students.length) /
-		// 	secondaryCourses.length,
+		avgCoreClassSize: totalCoreClassSizes / coreCourses.length,
+		avgSecondaryClassSize: totalSecondaryClassSizes / secondaryCourses.length,
 	};
 	newYear.metrics = newMetrics;
 	for (const student of newYear.students) {
