@@ -1,6 +1,7 @@
 // CURRENT ISSUES
 // Need extra logic for English, or any creditType where you need more than 3
 // Update and fix metrics, also wrap into separate function
+// Need to write up all logic for Stephen ...
 
 // ADDITIONAL FEATURES TO ADD
 // simulate student switching courses middle of year
@@ -18,8 +19,8 @@ const minConsiderPass = 0.75;
 const fullPass = 1;
 
 const scheduleSystemNum = 4;
-const maxIncomingFreshmen = 10;
-const minIncomingFreshmen = 5;
+let maxIncomingFreshmen = 10;
+let minIncomingFreshmen = 5;
 
 const chanceOfStartingEnglishCredit = 0.1;
 const chanceOfStartingMathCredit = 1;
