@@ -1,6 +1,6 @@
 // CURRENT ISSUES
-// need to fix freshmen going to Pre-Algebra if already taken in middle school
-// problems with student grades and metric counting of class sizes
+// Need extra logic for English, or any creditType where you need more than 3
+// Update and fix metrics, also wrap into separate function
 
 // ADDITIONAL FEATURES TO ADD
 // simulate student switching courses middle of year
@@ -18,11 +18,11 @@ const minConsiderPass = 0.75;
 const fullPass = 1;
 
 const scheduleSystemNum = 4;
-const maxIncomingFreshmen = 1;
-const minIncomingFreshmen = 1;
+const maxIncomingFreshmen = 10;
+const minIncomingFreshmen = 5;
 
 const chanceOfStartingEnglishCredit = 0.1;
-const chanceOfStartingMathCredit = 0.1;
+const chanceOfStartingMathCredit = 1;
 const chanceOfEarningSportCredit = 0.4;
 
 const allYearsReport = [];
@@ -1303,6 +1303,7 @@ function createStudents(numOfStudents = 25) {
 				title: "English I",
 				creditType: "english",
 				nextCourse: "English II",
+				creditsEarned: 1,
 			});
 		}
 		if (randMathCreditChance < chanceOfStartingMathCredit) {
@@ -1312,6 +1313,7 @@ function createStudents(numOfStudents = 25) {
 				title: "Pre-Algebra",
 				creditType: "math",
 				nextCourse: "Algebra I",
+				creditsEarned: 1,
 			});
 		}
 		students.push(newStudent);
@@ -1484,6 +1486,9 @@ function checkDidGraduate(studentRequirements) {
 
 function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 	if (!availableCourses.length) {
+		console.error(
+			"Tried to choose course when there were no available courses"
+		);
 		return null;
 	}
 
@@ -1496,6 +1501,7 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 	}
 
 	// Choose recovery courses if needed for credits that are missing from failed courses
+	// NEED UPDATED LOGIC IN CASE THEY JUST NEED THOSE CREDITS
 	const failedCredits = [];
 	for (const course of prevYearCourseHistory) {
 		if (course.creditsEarned < fullPass) {
@@ -1512,6 +1518,7 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 	}
 
 	// Next, pick a course based on current pathways (Example:  English I -> English II)
+	// NEED TO INVESTIGATE WHY THIS DOESN'T ALWAYS WORK ...
 	const pathwayCourseTitles = prevYearCourseHistory
 		.filter((course) => course.nextCourse)
 		.map((course) => course.nextCourse);
