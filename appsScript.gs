@@ -1,3 +1,4 @@
+const yearsOfSimulation = 20;
 const allYearsReport = [];
 settings = {};
 
@@ -15,13 +16,57 @@ function simulateSchedule() {
 	const rawCourses = coursesTab.getDataRange().getValues();
 	const rawSchedule = scheduleTab.getDataRange().getValues();
 
-	const yearsOfSimulation = 10;
 	for (let i = 0; i < yearsOfSimulation; i++) {
 		simulateSchoolYear(rawCourses, rawSchedule);
 	}
 
-	for (const year of allYearsReport) {
-		console.log(year.metrics);
+	const dateTimeStr = new Date().toLocaleString();
+	const newSheetName = "Results - " + dateTimeStr;
+	const newSheet = allSheets.insertSheet();
+	newSheet.setName(newSheetName);
+	const headers = [
+		"Sim Year",
+		"Total Students",
+		"Freshmen",
+		"Sophomores",
+		"Juniors",
+		"Seniors",
+		"Seniors +",
+		"Graduated",
+		"Dropped Out",
+		"Students w/Empty Periods",
+		"Cases When Senior Could Find Needed Course",
+		"Avg. Core Class Size",
+		"Avg. Secondary Class Size",
+	];
+	const headerRow = newSheet.getRange(1, 1, 1, headers.length);
+	headerRow.setValues([headers]);
+	headerRow.setBackground("lightblue");
+	headerRow.setFontWeight("bold");
+
+	for (let i = 2; i < allYearsReport.length + 2; i++) {
+		const curMetrics = allYearsReport[i - 2].metrics;
+		curMetrics.simYear = allYearsReport[i - 2].simYear;
+		console.log(curMetrics);
+		const curRow = newSheet.getRange(i, 1, 1, headers.length);
+		console.log(curRow.getValues());
+		curRow.setValues([
+			[
+				curMetrics.simYear,
+				curMetrics.totalStudents,
+				curMetrics.numFreshmen,
+				curMetrics.numSophomore,
+				curMetrics.numJunior,
+				curMetrics.numSenior,
+				curMetrics.numSuperSenior,
+				curMetrics.numGraduates,
+				curMetrics.numDropouts,
+				curMetrics.numStudentsWithEmptyBlocks,
+				curMetrics.numCasesSeniorCouldNotFindNeededCourse,
+				curMetrics.avgCoreClassSize,
+				curMetrics.avgSecondaryClassSize,
+			],
+		]);
 	}
 }
 
