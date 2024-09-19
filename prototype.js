@@ -25,20 +25,19 @@
 // measure by looking at the same course class sizes in the same schedule
 
 // Global Settings Variables
-const scheduleSystemNum = 4;
-let minIncomingFreshmen = 5;
-let maxIncomingFreshmen = 45;
-
-const sportCreditValue = 0.5;
-const minConsiderPass = 0.75;
-const fullConsiderPass = 1;
-
-const chanceOfStartingEnglishCredit = 0.1;
-const chanceOfStartingMathCredit = 1;
-const chanceOfEarningSportCredit = 0.4;
-
+const settings = {
+	scheduleSystemNum: 4,
+	minIncomingFreshmen: 5,
+	maxIncomingFreshmen: 45,
+	sportCreditValue: 0.5,
+	minConsiderPass: 0.75,
+	fullConsiderPass: 1,
+	chanceOfStartingEnglishCredit: 0.1,
+	chanceOfStartingMathCredit: 0.1,
+	chanceOfEarningSportCredit: 0.4,
+};
 const allYearsReport = [];
-const creditValue = 1 / scheduleSystemNum;
+const creditValue = 1 / settings.scheduleSystemNum;
 const graduationRequirements = {
 	credits: {
 		english: 4,
@@ -50,9 +49,9 @@ const graduationRequirements = {
 		elective: 5,
 	},
 	courses: {
-		"Alaska History": minConsiderPass,
-		Government: minConsiderPass,
-		Health: minConsiderPass,
+		"Alaska History": settings.minConsiderPass,
+		Government: settings.minConsiderPass,
+		Health: settings.minConsiderPass,
 	},
 };
 const orderedCoreCredits = ["english", "math", "science", "social"];
@@ -1275,9 +1274,9 @@ function createStudents(numOfStudents = 25) {
 		const newStudent = generateStudent();
 		const randEnglishCreditChance = Math.random();
 		const randMathCreditChance = Math.random();
-		if (randEnglishCreditChance < chanceOfStartingEnglishCredit) {
+		if (randEnglishCreditChance < settings.chanceOfStartingEnglishCredit) {
 			newStudent.requirements.credits["english"] +=
-				creditValue * scheduleSystemNum;
+				creditValue * settings.scheduleSystemNum;
 			newStudent.courseHistory["8"].push({
 				title: "English I",
 				creditType: "english",
@@ -1285,9 +1284,9 @@ function createStudents(numOfStudents = 25) {
 				creditsEarned: 1,
 			});
 		}
-		if (randMathCreditChance < chanceOfStartingMathCredit) {
+		if (randMathCreditChance < settings.chanceOfStartingMathCredit) {
 			newStudent.requirements.credits["math"] +=
-				creditValue * scheduleSystemNum;
+				creditValue * settings.scheduleSystemNum;
 			newStudent.courseHistory["8"].push({
 				title: "Pre-Algebra",
 				creditType: "math",
@@ -1366,7 +1365,7 @@ function getAvailableCourses(
 		const isNewOrRepeatable =
 			course.isRepeatable ||
 			!courseHistoryMap[course.title] ||
-			courseHistoryMap[course.title] < fullConsiderPass;
+			courseHistoryMap[course.title] < settings.fullConsiderPass;
 
 		let meetsGradeRequirements = true;
 		let meetsCourseRequirements = true;
@@ -1375,7 +1374,8 @@ function getAvailableCourses(
 		}
 		if (course.requirements.courses) {
 			meetsCourseRequirements = course.requirements.courses.every(
-				(courseTitle) => courseHistoryMap[courseTitle] >= minConsiderPass
+				(courseTitle) =>
+					courseHistoryMap[courseTitle] >= settings.minConsiderPass
 			);
 		}
 		const meetsAllRequirements =
@@ -1484,7 +1484,7 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 	// NEED NEW HANDLING FOR RETAKING SOME CREDITS OF JUST THAT COURSE
 	const failedCredits = [];
 	for (const course of prevYearCourseHistory) {
-		if (course.creditsEarned < fullConsiderPass) {
+		if (course.creditsEarned < settings.fullConsiderPass) {
 			failedCredits.push(course.creditType);
 		}
 	}
@@ -1517,7 +1517,7 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 
 function awardCreditsForYear(course) {
 	let creditsEarned = 0;
-	for (let i = 0; i < scheduleSystemNum; i++) {
+	for (let i = 0; i < settings.scheduleSystemNum; i++) {
 		const didPass = course.passRate > Math.random();
 		creditsEarned += didPass ? creditValue : 0;
 	}
@@ -1558,7 +1558,7 @@ function enrollStudent(availableCourses, studentSchedule, student) {
 
 		const studentRef = getStudentRef(student);
 		selectedCourse.students.push(studentRef);
-		if (creditsEarned >= minConsiderPass) {
+		if (creditsEarned >= settings.minConsiderPass) {
 			selectedCourse.passCount++;
 		}
 		return true;
@@ -1613,8 +1613,9 @@ function collectMetrics(newYear) {
 
 function simulateSchoolYear() {
 	const randNumNewStudents = Math.floor(
-		Math.random() * (maxIncomingFreshmen - minIncomingFreshmen) +
-			minIncomingFreshmen
+		Math.random() *
+			(settings.maxIncomingFreshmen - settings.minIncomingFreshmen) +
+			settings.minIncomingFreshmen
 	);
 	const newStudents = createStudents(randNumNewStudents);
 	const newYear = {
@@ -1781,10 +1782,10 @@ function simulateSchoolYear() {
 			// Add 0.5 PE credits for playing a sport based on chance
 			const randSportChance = Math.random();
 			if (
-				randSportChance < chanceOfEarningSportCredit &&
+				randSportChance < settings.chanceOfEarningSportCredit &&
 				!student.earnedSport
 			) {
-				student.requirements.credits["physical"] += sportCreditValue;
+				student.requirements.credits["physical"] += settings.sportCreditValue;
 			}
 		}
 	}
