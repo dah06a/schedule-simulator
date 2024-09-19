@@ -25,21 +25,20 @@
 // measure by looking at the same course class sizes in the same schedule
 
 // Global Settings Variables
-const creditValue = 0.25;
+const scheduleSystemNum = 4;
+let minIncomingFreshmen = 5;
+let maxIncomingFreshmen = 45;
+
 const sportCreditValue = 0.5;
 const minConsiderPass = 0.75;
-const fullPass = 1;
-
-const scheduleSystemNum = 4;
-let maxIncomingFreshmen = 5;
-let minIncomingFreshmen = 20;
+const fullConsiderPass = 1;
 
 const chanceOfStartingEnglishCredit = 0.1;
 const chanceOfStartingMathCredit = 1;
 const chanceOfEarningSportCredit = 0.4;
 
 const allYearsReport = [];
-const courseRequirements = ["Alaska History", "Health", "Government"];
+const creditValue = 1 / scheduleSystemNum;
 const graduationRequirements = {
 	credits: {
 		english: 4,
@@ -58,7 +57,7 @@ const graduationRequirements = {
 };
 const orderedCoreCredits = ["english", "math", "science", "social"];
 
-const orderedSecondaryCredits = ["health", "vocEd", "physical", "elective"];
+const orderedSecondaryCredits = ["vocEd", "physical", "elective"];
 
 const firstNames = [
 	"Cordelia",
@@ -1367,7 +1366,7 @@ function getAvailableCourses(
 		const isNewOrRepeatable =
 			course.isRepeatable ||
 			!courseHistoryMap[course.title] ||
-			courseHistoryMap[course.title] < fullPass;
+			courseHistoryMap[course.title] < fullConsiderPass;
 
 		let meetsGradeRequirements = true;
 		let meetsCourseRequirements = true;
@@ -1485,7 +1484,7 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 	// NEED NEW HANDLING FOR RETAKING SOME CREDITS OF JUST THAT COURSE
 	const failedCredits = [];
 	for (const course of prevYearCourseHistory) {
-		if (course.creditsEarned < fullPass) {
+		if (course.creditsEarned < fullConsiderPass) {
 			failedCredits.push(course.creditType);
 		}
 	}
