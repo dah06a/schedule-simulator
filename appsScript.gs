@@ -1,13 +1,16 @@
 function myFunction() {
 	const allSheets = SpreadsheetApp.getActiveSpreadsheet();
 	const settingsTab = allSheets.getSheetByName("Settings");
-	const coursesTab = allSheets.getSheetByName("Settings");
-	const scheduleTab = allSheets.getSheetByName("Settings");
-	const resultsTab = allSheets.getSheetByName("Settings");
+	const coursesTab = allSheets.getSheetByName("Courses");
+	const scheduleTab = allSheets.getSheetByName("Schedule");
+	const resultsTab = allSheets.getSheetByName("Results");
 
 	const rawSettings = settingsTab.getDataRange().getValues();
 	const [settings, graduationRequirements] = collectSettings(rawSettings);
-	console.log(graduationRequirements);
+
+	const rawCourses = coursesTab.getDataRange().getValues();
+	const rawSchedule = scheduleTab.getDataRange().getValues();
+	const newCourses = generateCourses(rawCourses, rawSchedule);
 }
 
 function collectSettings(rawSettings) {
@@ -58,4 +61,36 @@ function collectSettings(rawSettings) {
 		}
 	}
 	return [settings, graduationRequirements];
+}
+
+function generateCourses(rawCourses, rawSchedule) {
+	const allCourses = [];
+	const courseProperties = rawCourses[0];
+	for (let row = 1; row < rawCourses.length; row++) {
+		const newCourse = {};
+		for (let col = 0; col < rawCourses[row].length; col++) {
+			newCourse[courseProperties[col]] =
+				rawCourses[row][col] !== "" ? rawCourses[row][col] : null;
+		}
+		newCourse.requirements = {
+			courses: newCourse.requiredCourses?.split(",") || [],
+			grade: newCourse.requiredGrade || null,
+		};
+		delete newCourse.requiredCourses;
+		delete newCourse.requiredGrade;
+		allCourses.push(newCourse);
+	}
+	for (const row of rawSchedule) {
+		for (const col of row) {
+			if (col && typeof col === "string" && col.includes("id-")) {
+				const courseId = Number(col.split("\n")[1].replace("id-", ""));
+				const coursePeriod = Number(row[0].split(" ")[1].trim());
+				const matchingCourse = allCourses.find(
+					(course) => course.id === courseId
+				);
+				matchingCourse.period = coursePeriod;
+			}
+		}
+	}
+	return allCourses;
 }
