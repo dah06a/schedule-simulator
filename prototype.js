@@ -25,7 +25,9 @@
 // measure by looking at the same course class sizes in the same schedule
 
 // Global Settings Variables
+const allYearsReport = [];
 const settings = {
+	yearsOfSimulation: 20,
 	scheduleSystemNum: 4,
 	minIncomingFreshmen: 5,
 	maxIncomingFreshmen: 45,
@@ -35,10 +37,18 @@ const settings = {
 	chanceOfStartingEnglishCredit: 0.1,
 	chanceOfStartingMathCredit: 0.1,
 	chanceOfEarningSportCredit: 0.4,
+	orderedCredits: [
+		"english",
+		"math",
+		"science",
+		"social",
+		"vocEd",
+		"physical",
+		"elective",
+	],
 };
-const allYearsReport = [];
-const creditValue = 1 / settings.scheduleSystemNum;
-const graduationRequirements = {
+settings.creditValue = 1 / settings.scheduleSystemNum;
+settings.graduationRequirements = {
 	credits: {
 		english: 4,
 		math: 3,
@@ -54,215 +64,6 @@ const graduationRequirements = {
 		Health: settings.minConsiderPass,
 	},
 };
-const orderedCoreCredits = ["english", "math", "science", "social"];
-
-const orderedSecondaryCredits = ["vocEd", "physical", "elective"];
-
-const firstNames = [
-	"Cordelia",
-	"Lynna",
-	"Mercedes",
-	"Cam",
-	"Marillin",
-	"Kathy",
-	"Dorothea",
-	"Casandra",
-	"Dale",
-	"Samantha",
-	"Grayce",
-	"Kathryn",
-	"Elfrieda",
-	"Ailee",
-	"Zarah",
-	"Nola",
-	"Kiley",
-	"Denni",
-	"Isis",
-	"Rosalind",
-	"Darleen",
-	"Sibel",
-	"Johannah",
-	"Mei",
-	"Nancie",
-	"Leontine",
-	"Alex",
-	"Laurianne",
-	"Madalyn",
-	"Gwenette",
-	"Eilis",
-	"Rosabel",
-	"Valeda",
-	"Nyssa",
-	"Estella",
-	"Deonne",
-	"Krysta",
-	"Carlynn",
-	"Gracia",
-	"Letitia",
-	"Gertrudis",
-	"Harmony",
-	"Cordey",
-	"Tonia",
-	"Sarita",
-	"Brynna",
-	"Trude",
-	"Sibel",
-	"Latrena",
-	"Joyann",
-	"Kari",
-	"Aimee",
-	"Deidre",
-	"Jennee",
-	"Lexine",
-	"Nissa",
-	"Valli",
-	"Florence",
-	"Annabella",
-	"Aurelea",
-	"Pearline",
-	"Tansy",
-	"Angel",
-	"Catrina",
-	"Morissa",
-	"Deloris",
-	"Kris",
-	"Mathilde",
-	"Mabelle",
-	"Glynis",
-	"Ceil",
-	"Corrina",
-	"Phil",
-	"Jenni",
-	"Olivie",
-	"Yoshi",
-	"Dolly",
-	"Prudi",
-	"Robinet",
-	"Denna",
-	"Zelda",
-	"Jazmin",
-	"Gretta",
-	"Drusi",
-	"Wynn",
-	"Jannel",
-	"Odelle",
-	"Edin",
-	"Lorelle",
-	"Merridie",
-	"Mariann",
-	"Valerie",
-	"Lurette",
-	"Sadie",
-	"Gillie",
-	"Winny",
-	"Moira",
-	"Nerita",
-	"Martie",
-	"Geralda",
-];
-
-const lastNames = [
-	"Tienda",
-	"Pacitto",
-	"Janiak",
-	"Marinaccio",
-	"Erbs",
-	"Skinkis",
-	"Dresselhaus",
-	"Birkenmeier",
-	"Fouts",
-	"Strudwick",
-	"Johnke",
-	"Gonyo",
-	"Carling",
-	"Altamura",
-	"Bumba",
-	"Barwari",
-	"Dosier",
-	"Turow",
-	"Freise",
-	"Blacketter",
-	"Kolls",
-	"Klimek",
-	"Mccollom",
-	"Raap",
-	"Roiland",
-	"Daven",
-	"Dudkiewicz",
-	"Crus",
-	"Greenhow",
-	"Chy",
-	"Bailen",
-	"Kellock",
-	"Gosline",
-	"Dethomas",
-	"Lunstrum",
-	"Blech",
-	"Datson",
-	"Gaddam",
-	"Turmenne",
-	"Fletcher",
-	"Noullet",
-	"Iona",
-	"Leciejewski",
-	"Bockholt",
-	"Rittman",
-	"Lisher",
-	"Lazarus",
-	"Antrican",
-	"Ozog",
-	"Acero",
-	"Carrigg",
-	"Bastain",
-	"Betrand",
-	"Stillday",
-	"Gremore",
-	"Judy",
-	"Lemus",
-	"Sebetka",
-	"Miranti",
-	"Ozdemir",
-	"Bossler",
-	"Bredbenner",
-	"Smithhisler",
-	"Liban",
-	"Easterbrook",
-	"Marini",
-	"Quazi",
-	"Linsay",
-	"Raygo",
-	"Copelan",
-	"Perretti",
-	"Giorlando",
-	"Simer",
-	"Talavera",
-	"Slomka",
-	"Holko",
-	"Kuzmick",
-	"Balcita",
-	"Levovitz",
-	"Haylett",
-	"Mcnichol",
-	"Floerke",
-	"Saffran",
-	"Juneja",
-	"Telis",
-	"Buglino",
-	"Bongiorno",
-	"Seltzer",
-	"Scherz",
-	"Latif",
-	"Behenna",
-	"Glus",
-	"Cannarella",
-	"Gorbet",
-	"Monie",
-	"Berzoza",
-	"Ososki",
-	"Ovesen",
-	"Dehayes",
-	"Midlam",
-];
 
 function generateCourses() {
 	return [
@@ -1215,6 +1016,212 @@ function generateCourses() {
 	];
 }
 
+const firstNames = [
+	"Cordelia",
+	"Lynna",
+	"Mercedes",
+	"Cam",
+	"Marillin",
+	"Kathy",
+	"Dorothea",
+	"Casandra",
+	"Dale",
+	"Samantha",
+	"Grayce",
+	"Kathryn",
+	"Elfrieda",
+	"Ailee",
+	"Zarah",
+	"Nola",
+	"Kiley",
+	"Denni",
+	"Isis",
+	"Rosalind",
+	"Darleen",
+	"Sibel",
+	"Johannah",
+	"Mei",
+	"Nancie",
+	"Leontine",
+	"Alex",
+	"Laurianne",
+	"Madalyn",
+	"Gwenette",
+	"Eilis",
+	"Rosabel",
+	"Valeda",
+	"Nyssa",
+	"Estella",
+	"Deonne",
+	"Krysta",
+	"Carlynn",
+	"Gracia",
+	"Letitia",
+	"Gertrudis",
+	"Harmony",
+	"Cordey",
+	"Tonia",
+	"Sarita",
+	"Brynna",
+	"Trude",
+	"Sibel",
+	"Latrena",
+	"Joyann",
+	"Kari",
+	"Aimee",
+	"Deidre",
+	"Jennee",
+	"Lexine",
+	"Nissa",
+	"Valli",
+	"Florence",
+	"Annabella",
+	"Aurelea",
+	"Pearline",
+	"Tansy",
+	"Angel",
+	"Catrina",
+	"Morissa",
+	"Deloris",
+	"Kris",
+	"Mathilde",
+	"Mabelle",
+	"Glynis",
+	"Ceil",
+	"Corrina",
+	"Phil",
+	"Jenni",
+	"Olivie",
+	"Yoshi",
+	"Dolly",
+	"Prudi",
+	"Robinet",
+	"Denna",
+	"Zelda",
+	"Jazmin",
+	"Gretta",
+	"Drusi",
+	"Wynn",
+	"Jannel",
+	"Odelle",
+	"Edin",
+	"Lorelle",
+	"Merridie",
+	"Mariann",
+	"Valerie",
+	"Lurette",
+	"Sadie",
+	"Gillie",
+	"Winny",
+	"Moira",
+	"Nerita",
+	"Martie",
+	"Geralda",
+];
+
+const lastNames = [
+	"Tienda",
+	"Pacitto",
+	"Janiak",
+	"Marinaccio",
+	"Erbs",
+	"Skinkis",
+	"Dresselhaus",
+	"Birkenmeier",
+	"Fouts",
+	"Strudwick",
+	"Johnke",
+	"Gonyo",
+	"Carling",
+	"Altamura",
+	"Bumba",
+	"Barwari",
+	"Dosier",
+	"Turow",
+	"Freise",
+	"Blacketter",
+	"Kolls",
+	"Klimek",
+	"Mccollom",
+	"Raap",
+	"Roiland",
+	"Daven",
+	"Dudkiewicz",
+	"Crus",
+	"Greenhow",
+	"Chy",
+	"Bailen",
+	"Kellock",
+	"Gosline",
+	"Dethomas",
+	"Lunstrum",
+	"Blech",
+	"Datson",
+	"Gaddam",
+	"Turmenne",
+	"Fletcher",
+	"Noullet",
+	"Iona",
+	"Leciejewski",
+	"Bockholt",
+	"Rittman",
+	"Lisher",
+	"Lazarus",
+	"Antrican",
+	"Ozog",
+	"Acero",
+	"Carrigg",
+	"Bastain",
+	"Betrand",
+	"Stillday",
+	"Gremore",
+	"Judy",
+	"Lemus",
+	"Sebetka",
+	"Miranti",
+	"Ozdemir",
+	"Bossler",
+	"Bredbenner",
+	"Smithhisler",
+	"Liban",
+	"Easterbrook",
+	"Marini",
+	"Quazi",
+	"Linsay",
+	"Raygo",
+	"Copelan",
+	"Perretti",
+	"Giorlando",
+	"Simer",
+	"Talavera",
+	"Slomka",
+	"Holko",
+	"Kuzmick",
+	"Balcita",
+	"Levovitz",
+	"Haylett",
+	"Mcnichol",
+	"Floerke",
+	"Saffran",
+	"Juneja",
+	"Telis",
+	"Buglino",
+	"Bongiorno",
+	"Seltzer",
+	"Scherz",
+	"Latif",
+	"Behenna",
+	"Glus",
+	"Cannarella",
+	"Gorbet",
+	"Monie",
+	"Berzoza",
+	"Ososki",
+	"Ovesen",
+	"Dehayes",
+	"Midlam",
+];
+
 function generateId() {
 	const chars =
 		"abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -1276,7 +1283,7 @@ function createStudents(numOfStudents = 25) {
 		const randMathCreditChance = Math.random();
 		if (randEnglishCreditChance < settings.chanceOfStartingEnglishCredit) {
 			newStudent.requirements.credits["english"] +=
-				creditValue * settings.scheduleSystemNum;
+				settings.creditValue * settings.scheduleSystemNum;
 			newStudent.courseHistory["8"].push({
 				title: "English I",
 				creditType: "english",
@@ -1286,7 +1293,7 @@ function createStudents(numOfStudents = 25) {
 		}
 		if (randMathCreditChance < settings.chanceOfStartingMathCredit) {
 			newStudent.requirements.credits["math"] +=
-				creditValue * settings.scheduleSystemNum;
+				settings.creditValue * settings.scheduleSystemNum;
 			newStudent.courseHistory["8"].push({
 				title: "Pre-Algebra",
 				creditType: "math",
@@ -1421,23 +1428,23 @@ function assignCredits(studentSchedule, curRequirements) {
 			// Assign credits to main creditType or electives if they already have enough
 			if (
 				curRequirements.credits[course.creditType] <
-				graduationRequirements.credits[course.creditType]
+				settings.graduationRequirements.credits[course.creditType]
 			) {
-				curRequirements.credits[course.creditType] += creditValue;
+				curRequirements.credits[course.creditType] += settings.creditValue;
 			} else {
-				curRequirements.credits.elective += creditValue;
+				curRequirements.credits.elective += settings.creditValue;
 			}
 
 			// Assign credits for the special courses required for graduation (AK History, Health Government)
-			if (course.title in graduationRequirements.courses) {
+			if (course.title in settings.graduationRequirements.courses) {
 				if (
 					curRequirements.courses[course.title] <
-					graduationRequirements.courses[course.title]
+					settings.graduationRequirements.courses[course.title]
 				) {
-					curRequirements.courses[course.title] += creditValue;
+					curRequirements.courses[course.title] += settings.creditValue;
 				}
 			}
-			curCreditVal -= creditValue;
+			curCreditVal -= settings.creditValue;
 		}
 	}
 	return curRequirements;
@@ -1448,7 +1455,7 @@ function checkDidGraduate(studentRequirements) {
 	for (const [creditType, creditValue] of Object.entries(
 		studentRequirements.credits
 	)) {
-		if (graduationRequirements.credits[creditType] > creditValue) {
+		if (settings.graduationRequirements.credits[creditType] > creditValue) {
 			meetsCreditRequirements = false;
 		}
 	}
@@ -1456,7 +1463,7 @@ function checkDidGraduate(studentRequirements) {
 	for (const [courseName, creditValue] of Object.entries(
 		studentRequirements.courses
 	)) {
-		if (graduationRequirements.courses[courseName] > creditValue) {
+		if (settings.graduationRequirements.courses[courseName] > creditValue) {
 			meetsCourseRequirements = false;
 		}
 	}
@@ -1519,7 +1526,7 @@ function awardCreditsForYear(course) {
 	let creditsEarned = 0;
 	for (let i = 0; i < settings.scheduleSystemNum; i++) {
 		const didPass = course.passRate > Math.random();
-		creditsEarned += didPass ? creditValue : 0;
+		creditsEarned += didPass ? settings.creditValue : 0;
 	}
 	return creditsEarned;
 }
@@ -1567,22 +1574,35 @@ function enrollStudent(availableCourses, studentSchedule, student) {
 }
 
 function collectMetrics(newYear) {
-	const coreCourses = newYear.courses.filter(
-		(course) =>
-			orderedCoreCredits.includes(course.creditType) ||
-			course.title in graduationRequirements.courses
-	);
-	let totalCoreClassSizes = 0;
-	for (const course of coreCourses) {
-		totalCoreClassSizes += course.students.length;
+	const courseMaxSizes = [];
+	for (const course of newYear.courses) {
+		const courseMax = course.maxSize;
+		const maxSizeMatch = courseMaxSizes.find(
+			(max) => max.maxSize === course.maxSize
+		);
+		if (!maxSizeMatch) {
+			courseMaxSizes.push({
+				maxSize: courseMax,
+				totalCourses: 1,
+				totalStudents: course.students.length,
+			});
+		} else {
+			maxSizeMatch.totalCourses++;
+			maxSizeMatch.totalStudents += course.students.length;
+		}
 	}
-	const secondaryCourses = newYear.courses.filter((course) =>
-		orderedSecondaryCredits.includes(course.creditType)
-	);
-	let totalSecondaryClassSizes = 0;
-	for (const course of coreCourses) {
-		totalSecondaryClassSizes += course.students.length;
+	for (const maxSize of courseMaxSizes) {
+		const avg = Math.round(maxSize.totalStudents / maxSize.totalCourses);
+		maxSize.avgCourseSize = avg;
 	}
+	console.log(
+		"DROPOUT LIST:",
+		newYear.students.filter((student) => student.didDropout)
+	);
+	console.log(
+		"EMPTY COURSES:",
+		newYear.courses.filter((course) => !course.students.length)
+	);
 	return {
 		numFreshmen: newYear.students.filter((student) => student.grade === 9)
 			.length,
@@ -1606,12 +1626,13 @@ function collectMetrics(newYear) {
 		numCasesSeniorCouldNotFindNeededCourse: newYear.issues.filter(
 			(issue) => issue.type === "credits" && issue.student.grade > 11
 		).length,
-		avgCoreClassSize: totalCoreClassSizes / coreCourses.length,
-		avgSecondaryClassSize: totalSecondaryClassSizes / secondaryCourses.length,
+		numEmptyCourses: newYear.courses.filter((course) => !course.students.length)
+			.length,
+		courseSizeAvgs: courseMaxSizes,
 	};
 }
 
-function simulateSchoolYear() {
+function simulateSchoolYear(rawCourses, rawSchedule) {
 	const randNumNewStudents = Math.floor(
 		Math.random() *
 			(settings.maxIncomingFreshmen - settings.minIncomingFreshmen) +
@@ -1621,7 +1642,7 @@ function simulateSchoolYear() {
 	const newYear = {
 		id: generateId(),
 		simYear: allYearsReport.length + 1,
-		courses: generateCourses(),
+		courses: generateCourses(rawCourses, rawSchedule),
 		students: [...getAllActiveStudents(), ...newStudents],
 		issues: [],
 		metrics: {
@@ -1648,10 +1669,10 @@ function simulateSchoolYear() {
 			const studentSchedule = [];
 
 			// First, attempt to enroll based on core credits
-			for (const creditType of orderedCoreCredits) {
+			for (const creditType of settings.orderedCredits) {
 				if (
 					student.requirements.credits[creditType] <
-					graduationRequirements.credits[creditType]
+					settings.graduationRequirements.credits[creditType]
 				) {
 					const curCreditCourses = newYear.courses.filter(
 						(course) => course.creditType === creditType
@@ -1679,10 +1700,12 @@ function simulateSchoolYear() {
 			}
 
 			// Then enroll based on required courses
-			for (const courseTitle of Object.keys(graduationRequirements.courses)) {
+			for (const courseTitle of Object.keys(
+				settings.graduationRequirements.courses
+			)) {
 				if (
 					student.requirements.courses[courseTitle] <
-					graduationRequirements.courses[courseTitle]
+					settings.graduationRequirements.courses[courseTitle]
 				) {
 					const curRequiredCourses = newYear.courses.filter(
 						(course) => course.title === courseTitle
@@ -1709,38 +1732,8 @@ function simulateSchoolYear() {
 				}
 			}
 
-			// Then, enroll based on secondary credit types
-			for (const creditType of orderedSecondaryCredits) {
-				if (
-					student.requirements.credits[creditType] <
-					graduationRequirements.credits[creditType]
-				) {
-					const curCreditCourses = newYear.courses.filter(
-						(course) => course.creditType === creditType
-					);
-					const availableCourses = getAvailableCourses(
-						courseHistoryMap,
-						student.grade,
-						studentSchedule,
-						curCreditCourses
-					);
-					const didEnroll = enrollStudent(
-						availableCourses,
-						studentSchedule,
-						student
-					);
-					if (!didEnroll && student.grade > 11) {
-						newYear.issues.push({
-							student: student,
-							type: "credits",
-							message: `Senior could not find ${creditType} credits`,
-						});
-					}
-				}
-			}
-
 			// Then enroll in courses for any remaining empty periods
-			// DO THIS AFTER ALL STUDENTS HAVE BEEN ENROLLED - NOT IN THIS LOOP
+			// ??? DO THIS AFTER ALL STUDENTS HAVE BEEN ENROLLED - NOT IN THIS LOOP ???
 			const remainingPeriods = getAvailablePeriods(studentSchedule);
 			if (remainingPeriods.length && student.grade < 13) {
 				for (const period of remainingPeriods) {
@@ -1800,7 +1793,7 @@ function simulateSchoolYear() {
 	allYearsReport.push(newYear);
 }
 
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < settings.yearsOfSimulation; i++) {
 	simulateSchoolYear();
 }
 
