@@ -30,7 +30,7 @@ const settings = {
 	yearsOfSimulation: 20,
 	scheduleSystemNum: 4,
 	minIncomingFreshmen: 5,
-	maxIncomingFreshmen: 45,
+	maxIncomingFreshmen: 40,
 	sportCreditValue: 0.5,
 	minConsiderPass: 0.75,
 	fullConsiderPass: 1,
@@ -1559,16 +1559,16 @@ function enrollStudent(availableCourses, studentSchedule, student) {
 			studentSchedule
 		);
 		const creditsEarned = awardCreditsForYear(selectedCourse);
-
 		const courseRef = getCourseRef(selectedCourse, creditsEarned);
 		studentSchedule.push(courseRef);
 
 		const studentRef = getStudentRef(student);
 		selectedCourse.students.push(studentRef);
+
 		if (creditsEarned >= settings.minConsiderPass) {
 			selectedCourse.passCount++;
 		}
-		return true;
+		return selectedCourse;
 	}
 	return false;
 }
@@ -1603,6 +1603,9 @@ function collectMetrics(newYear) {
 		"EMPTY COURSES:",
 		newYear.courses.filter((course) => !course.students.length)
 	);
+	const emptyCourses = newYear.courses.filter(
+		(course) => !course.students.length
+	);
 	return {
 		numFreshmen: newYear.students.filter((student) => student.grade === 9)
 			.length,
@@ -1626,13 +1629,16 @@ function collectMetrics(newYear) {
 		numCasesSeniorCouldNotFindNeededCourse: newYear.issues.filter(
 			(issue) => issue.type === "credits" && issue.student.grade > 11
 		).length,
-		numEmptyCourses: newYear.courses.filter((course) => !course.students.length)
-			.length,
+		emptyCourses:
+			emptyCourses.length > 5
+				? emptyCourses.length
+				: emptyCourses.map((c) => c.title).join(", "),
 		courseSizeAvgs: courseMaxSizes,
 	};
 }
 
 function simulateSchoolYear(rawCourses, rawSchedule) {
+	// Setup new school year
 	const randNumNewStudents = Math.floor(
 		Math.random() *
 			(settings.maxIncomingFreshmen - settings.minIncomingFreshmen) +
@@ -1667,66 +1673,61 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 		for (const student of curStudents) {
 			const courseHistoryMap = getCourseHistoryMap(student);
 			const studentSchedule = [];
+			const creditSkipList = [];
+			const orderedCreditList = settings.orderedCredits.map((creditType) => ({
+				course: "",
+				credit: creditType,
+			}));
+			const orderedCourseList = Object.keys(
+				settings.graduationRequirements.courses
+			).map((courseTitle) => ({ course: courseTitle, credit: "" }));
+			const orderedEnrollment = [...orderedCourseList, ...orderedCreditList];
 
-			// First, attempt to enroll based on core credits
-			for (const creditType of settings.orderedCredits) {
+			// Try enrolling for each requuired course, then each credit type ordered by priority
+			for (const enrollmentType of orderedEnrollment) {
 				if (
-					student.requirements.credits[creditType] <
-					settings.graduationRequirements.credits[creditType]
+					enrollmentType.credit &&
+					creditSkipList.includes(enrollmentType.credit)
 				) {
-					const curCreditCourses = newYear.courses.filter(
-						(course) => course.creditType === creditType
-					);
-
+					continue;
+				}
+				if (
+					(enrollmentType.credit &&
+						student.requirements.credits[enrollmentType.credit]) <
+						settings.graduationRequirements.credits[enrollmentType.credit] ||
+					(enrollmentType.course &&
+						student.requirements.courses[enrollmentType.course] <
+							settings.graduationRequirements.courses[enrollmentType.course])
+				) {
+					const courseOptions = newYear.courses.filter((course) => {
+						if (enrollmentType.credit) {
+							return course.creditType === enrollmentType.credit;
+						} else {
+							return course.title === enrollmentType.course;
+						}
+					});
 					const availableCourses = getAvailableCourses(
 						courseHistoryMap,
 						student.grade,
 						studentSchedule,
-						curCreditCourses
+						courseOptions
 					);
-					const didEnroll = enrollStudent(
+					const didEnrollCourse = enrollStudent(
 						availableCourses,
 						studentSchedule,
-						student
+						student,
+						creditSkipList
 					);
-					if (!didEnroll && student.grade > 11) {
+					if (didEnrollCourse && enrollmentType.course) {
+						creditSkipList.push(didEnrollCourse.creditType);
+					}
+					if (!didEnrollCourse && student.grade > 11) {
 						newYear.issues.push({
 							student: student,
 							type: "credits",
-							message: `Senior could not find ${creditType} credits`,
-						});
-					}
-				}
-			}
-
-			// Then enroll based on required courses
-			for (const courseTitle of Object.keys(
-				settings.graduationRequirements.courses
-			)) {
-				if (
-					student.requirements.courses[courseTitle] <
-					settings.graduationRequirements.courses[courseTitle]
-				) {
-					const curRequiredCourses = newYear.courses.filter(
-						(course) => course.title === courseTitle
-					);
-					const availableCourses = getAvailableCourses(
-						courseHistoryMap,
-						student.grade,
-						studentSchedule,
-						curRequiredCourses
-					);
-					const didEnroll = enrollStudent(
-						availableCourses,
-						studentSchedule,
-						student
-					);
-					// Need to update this issue, since not really an issue if course is not priority yet
-					if (!didEnroll && student.grade > 11) {
-						newYear.issues.push({
-							student: student,
-							type: "requiredCourse",
-							message: `Senior could not find ${courseTitle} course`,
+							message: `Senior could not find option for ${
+								enrollmentType.course || enrollmentType.credit
+							}`,
 						});
 					}
 				}
@@ -1782,6 +1783,7 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 			}
 		}
 	}
+
 	for (const student of newYear.students) {
 		student.didGraduate = checkDidGraduate(student.requirements);
 		if (!student.didGraduate && student.grade > 12) {
