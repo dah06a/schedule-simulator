@@ -1,4 +1,3 @@
-const yearsOfSimulation = 20;
 const allYearsReport = [];
 settings = {};
 
@@ -7,7 +6,6 @@ function simulateSchedule() {
 	const settingsTab = allSheets.getSheetByName("Settings");
 	const coursesTab = allSheets.getSheetByName("Courses");
 	const scheduleTab = allSheets.getSheetByName("Schedule");
-	const resultsTab = allSheets.getSheetByName("Results");
 
 	const rawSettings = settingsTab.getDataRange().getValues();
 	settings = collectSettings(rawSettings);
@@ -16,7 +14,7 @@ function simulateSchedule() {
 	const rawCourses = coursesTab.getDataRange().getValues();
 	const rawSchedule = scheduleTab.getDataRange().getValues();
 
-	for (let i = 0; i < yearsOfSimulation; i++) {
+	for (let i = 0; i < settings.yearsOfSimulation; i++) {
 		simulateSchoolYear(rawCourses, rawSchedule);
 	}
 
@@ -36,9 +34,11 @@ function simulateSchedule() {
 		"Dropped Out",
 		"Students w/Empty Periods",
 		"Cases When Senior Could Find Needed Course",
-		"Avg. Core Class Size",
-		"Avg. Secondary Class Size",
+		"Empty Courses",
 	];
+	for (const courseMax of allYearsReport[0].metrics.courseSizeAvgs) {
+		headers.push(`Avg. Class Size of Max-${courseMax.maxSize}`);
+	}
 	const headerRow = newSheet.getRange(1, 1, 1, headers.length);
 	headerRow.setValues([headers]);
 	headerRow.setBackground("lightblue");
@@ -46,34 +46,32 @@ function simulateSchedule() {
 
 	for (let i = 2; i < allYearsReport.length + 2; i++) {
 		const curMetrics = allYearsReport[i - 2].metrics;
-		curMetrics.simYear = allYearsReport[i - 2].simYear;
-		console.log(curMetrics);
+		const simYear = allYearsReport[i - 2].simYear;
 		const curRow = newSheet.getRange(i, 1, 1, headers.length);
-		console.log(curRow.getValues());
-		curRow.setValues([
-			[
-				curMetrics.simYear,
-				curMetrics.totalStudents,
-				curMetrics.numFreshmen,
-				curMetrics.numSophomore,
-				curMetrics.numJunior,
-				curMetrics.numSenior,
-				curMetrics.numSuperSenior,
-				curMetrics.numGraduates,
-				curMetrics.numDropouts,
-				curMetrics.numStudentsWithEmptyBlocks,
-				curMetrics.numCasesSeniorCouldNotFindNeededCourse,
-				curMetrics.avgCoreClassSize,
-				curMetrics.avgSecondaryClassSize,
-			],
-		]);
+		const metricVals = [
+			simYear,
+			curMetrics.totalStudents,
+			curMetrics.numFreshmen,
+			curMetrics.numSophomore,
+			curMetrics.numJunior,
+			curMetrics.numSenior,
+			curMetrics.numSuperSenior,
+			curMetrics.numGraduates,
+			curMetrics.numDropouts,
+			curMetrics.numStudentsWithEmptyBlocks,
+			curMetrics.numCasesSeniorCouldNotFindNeededCourse,
+			curMetrics.emptyCourses,
+		];
+		for (const courseMax of curMetrics.courseSizeAvgs) {
+			metricVals.push(courseMax.avgCourseSize);
+		}
+		curRow.setValues([metricVals]);
 	}
 }
 
 function collectSettings(rawSettings) {
 	const settings = {
-		orderedCoreCredits: [],
-		orderedSecondaryCredits: [],
+		orderedCredits: [],
 	};
 	const graduationRequirements = {
 		credits: {},
@@ -110,20 +108,12 @@ function collectSettings(rawSettings) {
 		if (collectCredits) {
 			const creditName = row[0].trim();
 			const creditValue = row[1];
-			const creditIsPrimary = row[2].trim() === "Primary";
-			const creditRank = Number(row[3]);
+			const creditRank = Number(row[2]);
 			graduationRequirements.credits[creditName] = creditValue;
-			if (creditIsPrimary) {
-				settings.orderedCoreCredits.push({
-					creditType: creditName,
-					rank: creditRank,
-				});
-			} else {
-				settings.orderedSecondaryCredits.push({
-					creditType: creditName,
-					rank: creditRank,
-				});
-			}
+			settings.orderedCredits.push({
+				creditType: creditName,
+				rank: creditRank,
+			});
 			continue;
 		}
 		if (collectRequiredCourses) {
@@ -133,10 +123,7 @@ function collectSettings(rawSettings) {
 			continue;
 		}
 	}
-	settings.orderedCoreCredits = settings.orderedCoreCredits
-		.sort((a, b) => a.rank - b.rank)
-		.map((creditObject) => creditObject.creditType);
-	settings.orderedSecondaryCredits = settings.orderedSecondaryCredits
+	settings.orderedCredits = settings.orderedCredits
 		.sort((a, b) => a.rank - b.rank)
 		.map((creditObject) => creditObject.creditType);
 	settings.graduationRequirements = graduationRequirements;
@@ -581,30 +568,24 @@ function chooseRandCourseByPopularity(courses) {
 	return chooseList[randNdx];
 }
 
-function assignCredits(studentSchedule, curRequirements) {
-	for (const course of studentSchedule) {
-		let curCreditVal = course.creditsEarned;
-		while (curCreditVal > 0) {
-			// Assign credits to main creditType or electives if they already have enough
-			if (
-				curRequirements.credits[course.creditType] <
-				settings.graduationRequirements.credits[course.creditType]
-			) {
-				curRequirements.credits[course.creditType] += settings.creditValue;
-			} else {
-				curRequirements.credits.elective += settings.creditValue;
-			}
+function assignCredits(course, curRequirements) {
+	// Assign credits to main creditType or electives if they already have enough
+	if (
+		curRequirements.credits[course.creditType] <
+		settings.graduationRequirements.credits[course.creditType]
+	) {
+		curRequirements.credits[course.creditType] += settings.creditValue;
+	} else {
+		curRequirements.credits.elective += settings.creditValue;
+	}
 
-			// Assign credits for the special courses required for graduation (AK History, Health Government)
-			if (course.title in settings.graduationRequirements.courses) {
-				if (
-					curRequirements.courses[course.title] <
-					settings.graduationRequirements.courses[course.title]
-				) {
-					curRequirements.courses[course.title] += settings.creditValue;
-				}
-			}
-			curCreditVal -= settings.creditValue;
+	// Assign credits for the special courses required for graduation (AK History, Health Government)
+	if (course.title in settings.graduationRequirements.courses) {
+		if (
+			curRequirements.courses[course.title] <
+			settings.graduationRequirements.courses[course.title]
+		) {
+			curRequirements.courses[course.title] += settings.creditValue;
 		}
 	}
 	return curRequirements;
@@ -682,23 +663,15 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 	return chooseRandCourseByPopularity(availableCourses);
 }
 
-function awardCreditsForYear(course) {
-	let creditsEarned = 0;
-	for (let i = 0; i < settings.scheduleSystemNum; i++) {
-		const didPass = course.passRate > Math.random();
-		creditsEarned += didPass ? settings.creditValue : 0;
-	}
-	return creditsEarned;
-}
-
-function getCourseRef(selectedCourse, creditsEarned) {
+function getCourseRef(selectedCourse) {
 	return {
 		title: selectedCourse.title,
 		instructor: selectedCourse.instructor,
 		period: selectedCourse.period,
 		creditType: selectedCourse.creditType,
-		creditsEarned: creditsEarned,
 		nextCourse: selectedCourse.nextCourse,
+		passRate: selectedCourse.passRate,
+		creditsEarned: 0,
 	};
 }
 
@@ -718,38 +691,48 @@ function enrollStudent(availableCourses, studentSchedule, student) {
 			student.courseHistory[student.grade - 1],
 			studentSchedule
 		);
-		const creditsEarned = awardCreditsForYear(selectedCourse);
-
-		const courseRef = getCourseRef(selectedCourse, creditsEarned);
+		const courseRef = getCourseRef(selectedCourse);
 		studentSchedule.push(courseRef);
-
 		const studentRef = getStudentRef(student);
 		selectedCourse.students.push(studentRef);
-		if (creditsEarned >= settings.minConsiderPass) {
-			selectedCourse.passCount++;
-		}
-		return true;
+		return selectedCourse;
 	}
 	return false;
 }
 
 function collectMetrics(newYear) {
-	const coreCourses = newYear.courses.filter(
-		(course) =>
-			settings.orderedCoreCredits.includes(course.creditType) ||
-			course.title in settings.graduationRequirements.courses
-	);
-	let totalCoreClassSizes = 0;
-	for (const course of coreCourses) {
-		totalCoreClassSizes += course.students.length;
+	const courseMaxSizes = [];
+	for (const course of newYear.courses) {
+		const courseMax = course.maxSize;
+		const maxSizeMatch = courseMaxSizes.find(
+			(max) => max.maxSize === course.maxSize
+		);
+		if (!maxSizeMatch) {
+			courseMaxSizes.push({
+				maxSize: courseMax,
+				totalCourses: 1,
+				totalStudents: course.students.length,
+			});
+		} else {
+			maxSizeMatch.totalCourses++;
+			maxSizeMatch.totalStudents += course.students.length;
+		}
 	}
-	const secondaryCourses = newYear.courses.filter((course) =>
-		settings.orderedSecondaryCredits.includes(course.creditType)
-	);
-	let totalSecondaryClassSizes = 0;
-	for (const course of coreCourses) {
-		totalSecondaryClassSizes += course.students.length;
+	for (const maxSize of courseMaxSizes) {
+		const avg = Math.round(maxSize.totalStudents / maxSize.totalCourses);
+		maxSize.avgCourseSize = avg;
 	}
+	console.log(
+		"DROPOUT LIST:",
+		newYear.students.filter((student) => student.didDropout)
+	);
+	console.log(
+		"EMPTY COURSES:",
+		newYear.courses.filter((course) => !course.students.length)
+	);
+	const emptyCourses = newYear.courses.filter(
+		(course) => !course.students.length
+	);
 	return {
 		numFreshmen: newYear.students.filter((student) => student.grade === 9)
 			.length,
@@ -773,12 +756,16 @@ function collectMetrics(newYear) {
 		numCasesSeniorCouldNotFindNeededCourse: newYear.issues.filter(
 			(issue) => issue.type === "credits" && issue.student.grade > 11
 		).length,
-		avgCoreClassSize: totalCoreClassSizes / coreCourses.length,
-		avgSecondaryClassSize: totalSecondaryClassSizes / secondaryCourses.length,
+		emptyCourses:
+			emptyCourses.length > 5
+				? emptyCourses.length
+				: emptyCourses.map((c) => c.title).join(", "),
+		courseSizeAvgs: courseMaxSizes,
 	};
 }
 
 function simulateSchoolYear(rawCourses, rawSchedule) {
+	// Setup new school year
 	const randNumNewStudents = Math.floor(
 		Math.random() *
 			(settings.maxIncomingFreshmen - settings.minIncomingFreshmen) +
@@ -813,103 +800,68 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 		for (const student of curStudents) {
 			const courseHistoryMap = getCourseHistoryMap(student);
 			const studentSchedule = [];
-
-			// First, attempt to enroll based on core credits
-			for (const creditType of settings.orderedCoreCredits) {
-				if (
-					student.requirements.credits[creditType] <
-					settings.graduationRequirements.credits[creditType]
-				) {
-					const curCreditCourses = newYear.courses.filter(
-						(course) => course.creditType === creditType
-					);
-
-					const availableCourses = getAvailableCourses(
-						courseHistoryMap,
-						student.grade,
-						studentSchedule,
-						curCreditCourses
-					);
-					const didEnroll = enrollStudent(
-						availableCourses,
-						studentSchedule,
-						student
-					);
-					if (!didEnroll && student.grade > 11) {
-						newYear.issues.push({
-							student: student,
-							type: "credits",
-							message: `Senior could not find ${creditType} credits`,
-						});
-					}
-				}
-			}
-
-			// Then enroll based on required courses
-			for (const courseTitle of Object.keys(
+			const creditSkipList = [];
+			const orderedCreditList = settings.orderedCredits.map((creditType) => ({
+				course: "",
+				credit: creditType,
+			}));
+			const orderedCourseList = Object.keys(
 				settings.graduationRequirements.courses
-			)) {
-				if (
-					student.requirements.courses[courseTitle] <
-					settings.graduationRequirements.courses[courseTitle]
-				) {
-					const curRequiredCourses = newYear.courses.filter(
-						(course) => course.title === courseTitle
-					);
-					const availableCourses = getAvailableCourses(
-						courseHistoryMap,
-						student.grade,
-						studentSchedule,
-						curRequiredCourses
-					);
-					const didEnroll = enrollStudent(
-						availableCourses,
-						studentSchedule,
-						student
-					);
-					// Need to update this issue, since not really an issue if course is not priority yet
-					if (!didEnroll && student.grade > 11) {
-						newYear.issues.push({
-							student: student,
-							type: "requiredCourse",
-							message: `Senior could not find ${courseTitle} course`,
-						});
-					}
-				}
-			}
+			).map((courseTitle) => ({ course: courseTitle, credit: "" }));
+			const orderedEnrollment = [...orderedCourseList, ...orderedCreditList];
 
-			// Then, enroll based on secondary credit types
-			for (const creditType of settings.orderedSecondaryCredits) {
+			// Try enrolling for each required course, then each credit type ordered by priority
+			for (const enrollmentType of orderedEnrollment) {
 				if (
-					student.requirements.credits[creditType] <
-					settings.graduationRequirements.credits[creditType]
+					enrollmentType.credit &&
+					creditSkipList.includes(enrollmentType.credit)
 				) {
-					const curCreditCourses = newYear.courses.filter(
-						(course) => course.creditType === creditType
-					);
+					continue;
+				}
+				if (
+					(enrollmentType.credit &&
+						student.requirements.credits[enrollmentType.credit]) <
+						settings.graduationRequirements.credits[enrollmentType.credit] ||
+					(enrollmentType.course &&
+						student.requirements.courses[enrollmentType.course] <
+							settings.graduationRequirements.courses[enrollmentType.course])
+				) {
+					const courseOptions = newYear.courses.filter((course) => {
+						if (enrollmentType.credit) {
+							return course.creditType === enrollmentType.credit;
+						} else {
+							return course.title === enrollmentType.course;
+						}
+					});
 					const availableCourses = getAvailableCourses(
 						courseHistoryMap,
 						student.grade,
 						studentSchedule,
-						curCreditCourses
+						courseOptions
 					);
-					const didEnroll = enrollStudent(
+					const didEnrollCourse = enrollStudent(
 						availableCourses,
 						studentSchedule,
-						student
+						student,
+						creditSkipList
 					);
-					if (!didEnroll && student.grade > 11) {
+					if (didEnrollCourse && enrollmentType.course) {
+						creditSkipList.push(didEnrollCourse.creditType);
+					}
+					if (!didEnrollCourse && student.grade > 11) {
 						newYear.issues.push({
 							student: student,
 							type: "credits",
-							message: `Senior could not find ${creditType} credits`,
+							message: `Senior could not find option for ${
+								enrollmentType.course || enrollmentType.credit
+							}`,
 						});
 					}
 				}
 			}
 
 			// Then enroll in courses for any remaining empty periods
-			// DO THIS AFTER ALL STUDENTS HAVE BEEN ENROLLED - NOT IN THIS LOOP
+			// ??? DO THIS AFTER ALL STUDENTS HAVE BEEN ENROLLED - NOT IN THIS LOOP ???
 			const remainingPeriods = getAvailablePeriods(studentSchedule);
 			if (remainingPeriods.length && student.grade < 13) {
 				for (const period of remainingPeriods) {
@@ -937,16 +889,11 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 				}
 			}
 
-			// Finally, update each student course history and assign credits
+			// Add the completed schedule to the student object
 			const orderedSchedule = studentSchedule.sort(
 				(a, b) => a.period - b.period
 			);
 			student.courseHistory[student.grade] = orderedSchedule;
-			const updatedStudentRequirements = assignCredits(
-				orderedSchedule,
-				student.requirements
-			);
-			student.requirements = updatedStudentRequirements;
 
 			// Add 0.5 PE credits for playing a sport based on chance
 			const randSportChance = Math.random();
@@ -958,7 +905,34 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 			}
 		}
 	}
+
+	// Simulate earning credits throughout the year
+	for (let i = 0; i < settings.scheduleSystemNum; i++) {
+		for (const student of newYear.students) {
+			for (const courseRef of student.courseHistory[student.grade]) {
+				const didPass = courseRef.passRate > Math.random();
+				courseRef.creditsEarned += didPass ? settings.creditValue : 0;
+				const updatedStudentRequirements = assignCredits(
+					courseRef,
+					student.requirements
+				);
+				student.requirements = updatedStudentRequirements;
+			}
+		}
+	}
+
+	// Update course pass rates, check for graduates, and collect metrics
 	for (const student of newYear.students) {
+		for (const courseRef of student.courseHistory[student.grade]) {
+			if (courseRef.creditsEarned >= settings.minConsiderPass) {
+				const curCourse = newYear.courses.find(
+					(course) =>
+						course.title === courseRef.title &&
+						course.period === courseRef.period
+				);
+				curCourse.passCount++;
+			}
+		}
 		student.didGraduate = checkDidGraduate(student.requirements);
 		if (!student.didGraduate && student.grade > 12) {
 			student.didDropout = true;
