@@ -1,3 +1,19 @@
+// New Call
+// Find way to have students start at English II, BUT they do not have any English credit yet
+// Find way to have students Start either pre-algebra, or algebra, or possibly geometry
+// ONLY MATH ever comes in with credit (Algebra)
+// Changing courses in the middle of the year is unlikely - but sometimes happens with seniors changing into easier classes if needed
+// Need to change Health - it does NOT earn science credits, it is it's own type of credit
+// Sometimes students skip English IV and go to English V based on credits, exams, and student assessments
+// If English IV ever reaches the max, then start giving chance of having student skip English IV and go to English V
+// This chance will be based on BOTH their prev. English credits AND MATH credit history - at least 3 math credits and has done geometry
+// If this is the case, move them into English V
+
+// Test Cases
+// Students should never have an empty period except local seniors - make option so that all students always have to have full periods
+// Try to make every kid elibable for AK scholorship
+// have access to 4 years of cores - (English, Math, SS, Science)
+
 // CURRENT ISSUES
 // Need extra logic for English, or any creditType where you need more than 3
 // Need mechanism for switching courses during the year
@@ -24,6 +40,8 @@
 // where are the bottlenecks ...
 // measure by looking at the same course class sizes in the same schedule
 
+import runAllTests from "./tests.js";
+
 // Global Settings Variables
 const allYearsReport = [];
 const settings = {
@@ -34,7 +52,7 @@ const settings = {
 	sportCreditValue: 0.5,
 	minConsiderPass: 0.75,
 	fullConsiderPass: 1,
-	chanceOfStartingEnglishCredit: 0.1,
+	chanceOfStartingEnglishCredit: 0.3,
 	chanceOfStartingMathCredit: 0.1,
 	chanceOfEarningSportCredit: 0.4,
 	orderedCredits: [
@@ -1288,7 +1306,7 @@ function createStudents(numOfStudents = 25) {
 				title: "English I",
 				creditType: "english",
 				nextCourse: "English II",
-				creditsEarned: 1,
+				creditsEarned: 0,
 			});
 		}
 		if (randMathCreditChance < settings.chanceOfStartingMathCredit) {
@@ -1575,14 +1593,6 @@ function collectMetrics(newYear) {
 		const avg = Math.round(maxSize.totalStudents / maxSize.totalCourses);
 		maxSize.avgCourseSize = avg;
 	}
-	console.log(
-		"DROPOUT LIST:",
-		newYear.students.filter((student) => student.didDropout)
-	);
-	console.log(
-		"EMPTY COURSES:",
-		newYear.courses.filter((course) => !course.students.length)
-	);
 	const emptyCourses = newYear.courses.filter(
 		(course) => !course.students.length
 	);
@@ -1801,3 +1811,6 @@ for (let i = 0; i < settings.yearsOfSimulation; i++) {
 }
 
 console.log(allYearsReport);
+for (const year of allYearsReport) {
+	runAllTests(year);
+}
