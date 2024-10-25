@@ -1,7 +1,4 @@
 // New Call
-// Find way to have students start at English II, BUT they do not have any English credit yet
-// Find way to have students Start either pre-algebra, or algebra, or possibly geometry
-// ONLY MATH ever comes in with credit (Algebra)
 // Changing courses in the middle of the year is unlikely - but sometimes happens with seniors changing into easier classes if needed
 // Need to change Health - it does NOT earn science credits, it is it's own type of credit
 // Sometimes students skip English IV and go to English V based on credits, exams, and student assessments
@@ -11,7 +8,7 @@
 
 // Test Cases
 // Students should never have an empty period except local seniors - make option so that all students always have to have full periods
-// Try to make every kid elibable for AK scholorship
+// Try to make every kid eligable for AK scholorship
 // have access to 4 years of cores - (English, Math, SS, Science)
 
 // CURRENT ISSUES
@@ -19,12 +16,6 @@
 // Need mechanism for switching courses during the year
 // Need mechanism for adding/removing courses every other year
 // Need to write up all logic for Stephen ...
-
-//IDEA:
-
-// enroll all students first
-// then go through each segment of the school year in a loop (each quarter)
-// assign credits each cycle, but with extra logic/function to handle possible failures and re-enrollments
 
 // CALL
 // If freshman fails a quarter of English - then next year, enroll in English to make up that credit
@@ -36,9 +27,7 @@
 // simulate students entering district middle of year
 
 // MORE METRICS TO REPORT:
-// average class sizes - overall, by period, by teacher/subject
 // where are the bottlenecks ...
-// measure by looking at the same course class sizes in the same schedule
 
 import runAllTests from "./tests.js";
 
@@ -48,14 +37,16 @@ const settings = {
 	yearsOfSimulation: 20,
 	scheduleSystemNum: 4,
 	minIncomingFreshmen: 5,
-	maxIncomingFreshmen: 40,
+	maxIncomingFreshmen: 20,
 	sportCreditValue: 0.5,
 	minConsiderPass: 0.75,
 	fullConsiderPass: 1,
-	chanceOfStartingEnglishCredit: 0.3,
+	chanceOfStartingEnglishII: 0.3,
+	chanceOfStartingAlgebra: 0.3,
 	chanceOfStartingMathCredit: 0.1,
 	chanceOfEarningSportCredit: 0.4,
 	orderedCredits: [
+		"health",
 		"english",
 		"math",
 		"science",
@@ -72,6 +63,7 @@ settings.graduationRequirements = {
 		math: 3,
 		science: 3,
 		social: 3,
+		health: 1,
 		physical: 1,
 		vocEd: 2,
 		elective: 5,
@@ -79,7 +71,6 @@ settings.graduationRequirements = {
 	courses: {
 		"Alaska History": settings.minConsiderPass,
 		Government: settings.minConsiderPass,
-		Health: settings.minConsiderPass,
 	},
 };
 
@@ -708,7 +699,7 @@ function generateCourses() {
 		},
 		{
 			title: "Health",
-			creditType: "science",
+			creditType: "health",
 			instructor: "Mr. X",
 			isRecovery: false,
 			period: 2,
@@ -746,7 +737,7 @@ function generateCourses() {
 		},
 		{
 			title: "Health",
-			creditType: "science",
+			creditType: "health",
 			instructor: "Mr. X",
 			isRecovery: false,
 			period: 4,
@@ -1297,21 +1288,34 @@ function createStudents(numOfStudents = 25) {
 	const students = [];
 	for (let i = 0; i < numOfStudents; i++) {
 		const newStudent = generateStudent();
-		const randEnglishCreditChance = Math.random();
+		const randEnglishChance = Math.random();
+		const randAlgebraChance = Math.random();
 		const randMathCreditChance = Math.random();
-		if (randEnglishCreditChance < settings.chanceOfStartingEnglishCredit) {
-			newStudent.requirements.credits["english"] +=
-				settings.creditValue * settings.scheduleSystemNum;
+		if (randEnglishChance < settings.chanceOfStartingEnglishII) {
 			newStudent.courseHistory["8"].push({
 				title: "English I",
 				creditType: "english",
 				nextCourse: "English II",
-				creditsEarned: 0,
+				creditsEarned: 1,
 			});
 		}
 		if (randMathCreditChance < settings.chanceOfStartingMathCredit) {
 			newStudent.requirements.credits["math"] +=
 				settings.creditValue * settings.scheduleSystemNum;
+			newStudent.courseHistory["8"].push(
+				{
+					title: "Pre-Algebra",
+					creditType: "math",
+					creditsEarned: 1,
+				},
+				{
+					title: "Algebra I",
+					creditType: "math",
+					nextCourse: "Geometry",
+					creditsEarned: 1,
+				}
+			);
+		} else if (randAlgebraChance < settings.chanceOfStartingAlgebra) {
 			newStudent.courseHistory["8"].push({
 				title: "Pre-Algebra",
 				creditType: "math",
@@ -1384,7 +1388,7 @@ function getAvailableCourses(
 		const periodIsAvailable = getAvailablePeriods(curSchedule).includes(
 			course.period
 		);
-		const isNotHigherGradePriority =
+		const matchesGradePriority =
 			!course.gradePriority || studentGrade >= course.gradePriority;
 
 		const isNewOrRepeatable =
@@ -1409,7 +1413,7 @@ function getAvailableCourses(
 			courseIsNotFull &&
 			notAlreadyInSchedule &&
 			periodIsAvailable &&
-			isNotHigherGradePriority &&
+			matchesGradePriority &&
 			isNewOrRepeatable &&
 			meetsAllRequirements
 		) {
@@ -1419,6 +1423,7 @@ function getAvailableCourses(
 	});
 }
 
+// NEED TO UPDATE THIS FUNCTION TO BE DYNAMIC BASED ON SCHEDULE
 function getAvailablePeriods(curSchedule) {
 	const allPeriods = [1, 2, 3, 4, 5, 6];
 	const enrolledPeriods = curSchedule.map((course) => course.period);
@@ -1450,7 +1455,7 @@ function assignCredits(course, curRequirements) {
 		curRequirements.credits.elective += settings.creditValue;
 	}
 
-	// Assign credits for the special courses required for graduation (AK History, Health Government)
+	// Assign credits for the special courses required for graduation (AK History, Health, Government)
 	if (course.title in settings.graduationRequirements.courses) {
 		if (
 			curRequirements.courses[course.title] <
@@ -1663,24 +1668,37 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 		for (const student of curStudents) {
 			const courseHistoryMap = getCourseHistoryMap(student);
 			const studentSchedule = [];
-			const creditSkipList = [];
+
+			// Handle special scenario for 9th grader with English I or Algebra I
+			// NEED WAY TO EXTRACT CASES LIKE THIS TO GENERALIZED LOGIC
+			if (
+				student.grade === 9 &&
+				courseHistoryMap["Pre-Algebra"] &&
+				courseHistoryMap["Algebra I"]
+			) {
+				const nextMathCourses = newYear.courses.filter(
+					(course) => course.title === "Geometry"
+				);
+				enrollStudent(nextMathCourses, studentSchedule, student);
+			}
+			if (student.grade === 9 && courseHistoryMap["English I"]) {
+				const nextEnglishCourses = newYear.courses.filter(
+					(course) => course.title === "English II"
+				);
+				enrollStudent(nextEnglishCourses, studentSchedule, student);
+			}
+
 			const orderedCreditList = settings.orderedCredits.map((creditType) => ({
-				course: "",
+				course: null,
 				credit: creditType,
 			}));
 			const orderedCourseList = Object.keys(
 				settings.graduationRequirements.courses
-			).map((courseTitle) => ({ course: courseTitle, credit: "" }));
+			).map((courseTitle) => ({ course: courseTitle, credit: null }));
 			const orderedEnrollment = [...orderedCourseList, ...orderedCreditList];
 
 			// Try enrolling for each required course, then each credit type ordered by priority
 			for (const enrollmentType of orderedEnrollment) {
-				if (
-					enrollmentType.credit &&
-					creditSkipList.includes(enrollmentType.credit)
-				) {
-					continue;
-				}
 				if (
 					(enrollmentType.credit &&
 						student.requirements.credits[enrollmentType.credit]) <
@@ -1705,12 +1723,8 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 					const didEnrollCourse = enrollStudent(
 						availableCourses,
 						studentSchedule,
-						student,
-						creditSkipList
+						student
 					);
-					if (didEnrollCourse && enrollmentType.course) {
-						creditSkipList.push(didEnrollCourse.creditType);
-					}
 					if (!didEnrollCourse && student.grade > 11) {
 						newYear.issues.push({
 							student: student,
@@ -1811,6 +1825,4 @@ for (let i = 0; i < settings.yearsOfSimulation; i++) {
 }
 
 console.log(allYearsReport);
-for (const year of allYearsReport) {
-	runAllTests(year);
-}
+runAllTests(allYearsReport);
