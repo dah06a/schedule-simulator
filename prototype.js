@@ -29,6 +29,26 @@
 // MORE METRICS TO REPORT:
 // where are the bottlenecks ...
 
+// Curveballs
+// - kids enter in middle of year - min of 60 students total that enter, max of 100 (but max is very rare) - more like 80 normally
+// - try to account for attrition rate - kids sometimes leave each school year
+// - no more than 140 kids in the whole school
+
+// Soft Cap for each of these
+// - freshman target = 35  (usually between 20 - 40)
+// - sophomore target = 35 (usually between 20 - 40)
+// - junior target = 35 (usually between 20 - 40)
+// - senior target = 35 (usually between 20 - 40)
+
+// NEW SETTINGS
+
+// - total kids
+// - attrition rate per grade level
+// - min and max number of applicants per grade level
+// - super-impose actual class numbers over the schedule instead/with empty course list and class averages
+// - try to do averages over the full simulation, not just average per type of class
+// - maybe put all the courses at the bottom with different columns of info per each course at bottom
+
 import runAllTests from "./tests.js";
 
 // Global Settings Variables
@@ -1430,12 +1450,41 @@ function getAvailablePeriods(curSchedule) {
 	return allPeriods.filter((period) => !enrolledPeriods.includes(period));
 }
 
-function chooseRandCourseByPopularity(courses) {
+function chooseByScheduleOrPopularity(courses, nextCoursesNeeded) {
 	if (courses.length === 1) {
 		return courses[0];
 	}
+	let courseList = courses;
+
+	if (nextCoursesNeeded.length) {
+		const coursesCopy = [...courses];
+		for (const course of coursesCopy) {
+			let conflictingPeriods = 0;
+			for (const nextCourse of nextCoursesNeeded) {
+				if (course.period === nextCourse.period) {
+					conflictingPeriods++;
+				}
+			}
+			course.conflicts = conflictingPeriods;
+		}
+		const coursesWithoutConflict = coursesCopy.filter(
+			(course) => course.conflicts === 0
+		);
+		if (coursesWithoutConflict.length) {
+			courseList = coursesWithoutConflict;
+		} else {
+			let minConflicts = Math.min(
+				coursesCopy.map((course) => course.conflicts)
+			);
+			const coursesWithMinConflicts = coursesCopy.filter(
+				(course) => course.conflicts <= minConflicts
+			);
+			courseList = coursesWithMinConflicts;
+		}
+	}
+
 	const chooseList = [];
-	for (const course of courses) {
+	for (const course of courseList) {
 		for (let i = 0; i < course.popularity; i++) {
 			chooseList.push(course);
 		}
@@ -1487,7 +1536,12 @@ function checkDidGraduate(studentRequirements) {
 	return meetsCreditRequirements && meetsCourseRequirements;
 }
 
-function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
+function chooseCourse(
+	availableCourses,
+	studentGrade,
+	prevYearCourseHistory,
+	nextCoursesNeeded
+) {
 	if (!availableCourses.length) {
 		console.error(
 			"Tried to choose course when there were no available courses"
@@ -1500,7 +1554,7 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 		(course) => course.gradePriority && course.gradePriority === studentGrade
 	);
 	if (priorityCourses.length) {
-		return chooseRandCourseByPopularity(priorityCourses);
+		return chooseByScheduleOrPopularity(priorityCourses, nextCoursesNeeded);
 	}
 
 	// Choose recovery courses if needed for credits that are missing from failed courses
@@ -1517,7 +1571,7 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 			(course) => course.isRecovery && failedCredits.includes(course.creditType)
 		);
 		if (recoveryCourses.length) {
-			return chooseRandCourseByPopularity(recoveryCourses);
+			return chooseByScheduleOrPopularity(recoveryCourses, nextCoursesNeeded);
 		}
 	}
 
@@ -1531,12 +1585,12 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 			pathwayCourseTitles.includes(course.title)
 		);
 		if (nextCourses.length) {
-			return chooseRandCourseByPopularity(nextCourses);
+			return chooseByScheduleOrPopularity(nextCourses, nextCoursesNeeded);
 		}
 	}
 
 	// Otherwise, if no cases are met, return a random course based on popularity
-	return chooseRandCourseByPopularity(availableCourses);
+	return chooseByScheduleOrPopularity(availableCourses, nextCoursesNeeded);
 }
 
 function getCourseRef(selectedCourse) {
@@ -1559,13 +1613,25 @@ function getStudentRef(student) {
 	};
 }
 
-function enrollStudent(availableCourses, studentSchedule, student) {
+function enrollStudent(availableCourses, studentSchedule, student, allCourses) {
+	// Find cases where there is a next course needed, but only 1
+	const nextCourseTitles = student.courseHistory[student.grade - 1]
+		.filter((course) => course.nextCourse)
+		.map((c) => c.nextCourse);
+	if (student.grade === 9 && nextCourseTitles.includes("Geometry")) {
+		// debugger;
+	}
+	const nextCoursesNeeded = allCourses.filter(
+		(course) =>
+			nextCourseTitles.includes(course.title) &&
+			!studentSchedule.find((c) => c.title === course.title)
+	);
 	if (availableCourses.length) {
 		const selectedCourse = chooseCourse(
 			availableCourses,
 			student.grade,
 			student.courseHistory[student.grade - 1],
-			studentSchedule
+			nextCoursesNeeded
 		);
 		const courseRef = getCourseRef(selectedCourse);
 		studentSchedule.push(courseRef);
@@ -1671,22 +1737,42 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 
 			// Handle special scenario for 9th grader with English I or Algebra I
 			// NEED WAY TO EXTRACT CASES LIKE THIS TO GENERALIZED LOGIC
-			if (
-				student.grade === 9 &&
-				courseHistoryMap["Pre-Algebra"] &&
-				courseHistoryMap["Algebra I"]
-			) {
-				const nextMathCourses = newYear.courses.filter(
-					(course) => course.title === "Geometry"
-				);
-				enrollStudent(nextMathCourses, studentSchedule, student);
-			}
-			if (student.grade === 9 && courseHistoryMap["English I"]) {
-				const nextEnglishCourses = newYear.courses.filter(
-					(course) => course.title === "English II"
-				);
-				enrollStudent(nextEnglishCourses, studentSchedule, student);
-			}
+
+			// pre algebra only -> Algebra I from period 1
+			// english I only -> either English II class, doesn't matter
+			// pre algebra and english I -> either set of Algebra I and English II, doesn't matter
+			// pre algebra and algebra I only -> either Geometry, only 1 period available
+			// pre algebra and algebra I and english I -> must be either Geometry from period 3 and English II from period 5
+			// const hadPreAlgebra = student.grade === 9 && courseHistoryMap["Pre-Algebra"];
+			// const hadAlgebraI = student.grade === 9 && courseHistoryMap["Algebra I"];
+			// const hadEnglishI = student.grade === 9 && courseHistoryMap["English I"];
+
+			// if (
+			// 	student.grade === 9 &&
+			// 	courseHistoryMap["Pre-Algebra"] &&
+			// 	courseHistoryMap["Algebra I"]
+			// ) {
+			// 	const nextMathCourses = newYear.courses.filter(
+			// 		(course) => course.title === "Geometry"
+			// 	);
+			// 	enrollStudent(nextMathCourses, studentSchedule, student);
+			// } else if (
+			// 	student.grade === 9 &&
+			// 	courseHistoryMap["Pre-Algebra"] &&
+			// 	!courseHistoryMap["Algebra I"]
+			// ) {
+			// 	// CAN'T CHOOSE PERIOD 4 SINCE THAT IS THE ONLY PERIOD FOR ENGLISH I
+			// 	const nextMathCourses = newYear.courses.filter(
+			// 		(course) => course.title === "Algebra I" && course.period === 1
+			// 	);
+			// 	enrollStudent(nextMathCourses, studentSchedule, student);
+			// }
+			// if (student.grade === 9 && courseHistoryMap["English I"]) {
+			// 	const nextEnglishCourses = newYear.courses.filter(
+			// 		(course) => course.title === "English II"
+			// 	);
+			// 	enrollStudent(nextEnglishCourses, studentSchedule, student);
+			// }
 
 			const orderedCreditList = settings.orderedCredits.map((creditType) => ({
 				course: null,
@@ -1723,7 +1809,8 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 					const didEnrollCourse = enrollStudent(
 						availableCourses,
 						studentSchedule,
-						student
+						student,
+						newYear.courses
 					);
 					if (!didEnrollCourse && student.grade > 11) {
 						newYear.issues.push({
@@ -1754,7 +1841,8 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 					const didEnroll = enrollStudent(
 						availableCourses,
 						studentSchedule,
-						student
+						student,
+						newYear.courses
 					);
 					if (!didEnroll && student.grade < 12) {
 						newYear.issues.push({
