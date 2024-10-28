@@ -1455,6 +1455,9 @@ function chooseByScheduleOrPopularity(courses, nextCoursesNeeded) {
 		return courses[0];
 	}
 	let courseList = courses;
+	nextCoursesNeeded = nextCoursesNeeded.filter(
+		(course) => !courses.find((c) => c.title === course.title)
+	);
 
 	if (nextCoursesNeeded.length) {
 		const coursesCopy = [...courses];
@@ -1473,8 +1476,8 @@ function chooseByScheduleOrPopularity(courses, nextCoursesNeeded) {
 		if (coursesWithoutConflict.length) {
 			courseList = coursesWithoutConflict;
 		} else {
-			let minConflicts = Math.min(
-				coursesCopy.map((course) => course.conflicts)
+			const minConflicts = Math.min(
+				...coursesCopy.map((course) => course.conflicts)
 			);
 			const coursesWithMinConflicts = coursesCopy.filter(
 				(course) => course.conflicts <= minConflicts
