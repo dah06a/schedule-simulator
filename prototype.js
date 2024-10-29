@@ -57,7 +57,7 @@ const settings = {
 	yearsOfSimulation: 20,
 	scheduleSystemNum: 4,
 	minIncomingFreshmen: 5,
-	maxIncomingFreshmen: 20,
+	maxIncomingFreshmen: 30,
 	sportCreditValue: 0.5,
 	minConsiderPass: 0.75,
 	fullConsiderPass: 1,
@@ -1455,10 +1455,17 @@ function chooseByScheduleOrPopularity(courses, nextCoursesNeeded) {
 		return courses[0];
 	}
 	let courseList = courses;
+
+	// Try to choose more intelligently, by not selecting a course that has a known conflict with another needed course
+	// If there are no choices available without a conflict, choose course with min number of conflicts
+	// Example:
+	// - Choosing between two "English II" courses
+	// - But the student will also need to take "Geometry" this year
+	// - One of the "English II" options is the same period as the only "Geometry" course
+	// - So, pick the other option which does NOT have a conflict with "Geometry"
 	nextCoursesNeeded = nextCoursesNeeded.filter(
 		(course) => !courses.find((c) => c.title === course.title)
 	);
-
 	if (nextCoursesNeeded.length) {
 		const coursesCopy = [...courses];
 		for (const course of coursesCopy) {
@@ -1579,7 +1586,6 @@ function chooseCourse(
 	}
 
 	// Next, pick a course based on current pathways (Example:  English I -> English II)
-	// NEED TO INVESTIGATE WHY THIS DOESN'T ALWAYS WORK ...
 	const pathwayCourseTitles = prevYearCourseHistory
 		.filter((course) => course.nextCourse)
 		.map((course) => course.nextCourse);
@@ -1616,19 +1622,24 @@ function getStudentRef(student) {
 	};
 }
 
-function enrollStudent(availableCourses, studentSchedule, student, allCourses) {
+function enrollStudent(
+	availableCourses,
+	studentSchedule,
+	student,
+	allCourses,
+	compareNextCourses
+) {
 	// Find cases where there is a next course needed, but only 1
 	const nextCourseTitles = student.courseHistory[student.grade - 1]
 		.filter((course) => course.nextCourse)
 		.map((c) => c.nextCourse);
-	if (student.grade === 9 && nextCourseTitles.includes("Geometry")) {
-		// debugger;
-	}
-	const nextCoursesNeeded = allCourses.filter(
-		(course) =>
-			nextCourseTitles.includes(course.title) &&
-			!studentSchedule.find((c) => c.title === course.title)
-	);
+	const nextCoursesNeeded = compareNextCourses
+		? allCourses.filter(
+				(course) =>
+					nextCourseTitles.includes(course.title) &&
+					!studentSchedule.find((c) => c.title === course.title)
+		  )
+		: [];
 	if (availableCourses.length) {
 		const selectedCourse = chooseCourse(
 			availableCourses,
@@ -1737,46 +1748,6 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 		for (const student of curStudents) {
 			const courseHistoryMap = getCourseHistoryMap(student);
 			const studentSchedule = [];
-
-			// Handle special scenario for 9th grader with English I or Algebra I
-			// NEED WAY TO EXTRACT CASES LIKE THIS TO GENERALIZED LOGIC
-
-			// pre algebra only -> Algebra I from period 1
-			// english I only -> either English II class, doesn't matter
-			// pre algebra and english I -> either set of Algebra I and English II, doesn't matter
-			// pre algebra and algebra I only -> either Geometry, only 1 period available
-			// pre algebra and algebra I and english I -> must be either Geometry from period 3 and English II from period 5
-			// const hadPreAlgebra = student.grade === 9 && courseHistoryMap["Pre-Algebra"];
-			// const hadAlgebraI = student.grade === 9 && courseHistoryMap["Algebra I"];
-			// const hadEnglishI = student.grade === 9 && courseHistoryMap["English I"];
-
-			// if (
-			// 	student.grade === 9 &&
-			// 	courseHistoryMap["Pre-Algebra"] &&
-			// 	courseHistoryMap["Algebra I"]
-			// ) {
-			// 	const nextMathCourses = newYear.courses.filter(
-			// 		(course) => course.title === "Geometry"
-			// 	);
-			// 	enrollStudent(nextMathCourses, studentSchedule, student);
-			// } else if (
-			// 	student.grade === 9 &&
-			// 	courseHistoryMap["Pre-Algebra"] &&
-			// 	!courseHistoryMap["Algebra I"]
-			// ) {
-			// 	// CAN'T CHOOSE PERIOD 4 SINCE THAT IS THE ONLY PERIOD FOR ENGLISH I
-			// 	const nextMathCourses = newYear.courses.filter(
-			// 		(course) => course.title === "Algebra I" && course.period === 1
-			// 	);
-			// 	enrollStudent(nextMathCourses, studentSchedule, student);
-			// }
-			// if (student.grade === 9 && courseHistoryMap["English I"]) {
-			// 	const nextEnglishCourses = newYear.courses.filter(
-			// 		(course) => course.title === "English II"
-			// 	);
-			// 	enrollStudent(nextEnglishCourses, studentSchedule, student);
-			// }
-
 			const orderedCreditList = settings.orderedCredits.map((creditType) => ({
 				course: null,
 				credit: creditType,
@@ -1813,7 +1784,8 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 						availableCourses,
 						studentSchedule,
 						student,
-						newYear.courses
+						newYear.courses,
+						true
 					);
 					if (!didEnrollCourse && student.grade > 11) {
 						newYear.issues.push({
@@ -1828,13 +1800,14 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 			}
 
 			// Then enroll in courses for any remaining empty periods
-			// ??? DO THIS AFTER ALL STUDENTS HAVE BEEN ENROLLED - NOT IN THIS LOOP ???
 			const remainingPeriods = getAvailablePeriods(studentSchedule);
 			if (remainingPeriods.length && student.grade < 13) {
 				for (const period of remainingPeriods) {
 					const curPeriodCourses = newYear.courses.filter(
 						(course) => course.period === period
 					);
+
+					// WORKING HERE - WHY FAILURES WITH STUDENTS MISSING PERIOD 5 CLASSES???
 					const availableCourses = getAvailableCourses(
 						courseHistoryMap,
 						student.grade,
@@ -1845,14 +1818,29 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 						availableCourses,
 						studentSchedule,
 						student,
-						newYear.courses
+						newYear.courses,
+						false
 					);
 					if (!didEnroll && student.grade < 12) {
-						newYear.issues.push({
-							student: student,
-							type: "empty",
-							message: `Empty ${period}th period block for ${student.grade}th grader`,
-						});
+						const newAvailableCourses = curPeriodCourses.filter(
+							(course) =>
+								!studentSchedule.find((c) => c.title === course.title) &&
+								course.students.length < course.maxSize
+						);
+						const newEnroll = enrollStudent(
+							newAvailableCourses,
+							studentSchedule,
+							student,
+							newYear.courses,
+							false
+						);
+						if (!newEnroll && student.grade < 12) {
+							newYear.issues.push({
+								student: student,
+								type: "empty",
+								message: `Empty ${period}th period block for ${student.grade}th grader`,
+							});
+						}
 					}
 				}
 			}

@@ -165,7 +165,7 @@ export default function runAllTests(allYearsReport) {
 					student.courseHistory[studentYear].length < fullCourseLoad &&
 					!studentInFailList
 				) {
-					test5Fails.push(student);
+					test5Fails.push({ ...student, fromYear: year.simYear });
 				}
 				studentYear++;
 			}
@@ -203,7 +203,7 @@ export default function runAllTests(allYearsReport) {
 					student.courseHistory[studentYear].length > maxClasses &&
 					!studentInFailList
 				) {
-					test6Fails.push(student);
+					test6Fails.push({ ...student, fromYear: year.simYear });
 				}
 				studentYear++;
 			}
