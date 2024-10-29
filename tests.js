@@ -1,5 +1,3 @@
-// put guard for student already in fail list at top instead!!!
-
 export default function runAllTests(allYearsReport) {
 	// --- TEST 1 --- //
 	console.log("Test 1 - All freshman must take either English I or English II");
@@ -212,6 +210,143 @@ export default function runAllTests(allYearsReport) {
 	if (test6Fails.length) {
 		console.error("FAIL");
 		console.log(test6Fails);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
+
+	// --- TEST 7 --- //
+	console.log("Test 7 - All freshman must take a science class");
+	const test7Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test7Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			const freshmanScience = student.courseHistory["9"].find(
+				(course) => course.creditType === "science"
+			);
+			if (!freshmanScience) {
+				test7Fails.push({ ...student, fromYear: year.simYear });
+			}
+		}
+	}
+	if (test7Fails.length) {
+		console.error("FAIL");
+		console.log(test7Fails);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
+
+	// --- TEST 8 --- //
+	console.log("Test 8 - All freshman should take AK History");
+	const test8Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test8Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			const freshmanAkHistory = student.courseHistory["9"].find(
+				(course) => course.title === "Alaska History"
+			);
+			if (!freshmanAkHistory) {
+				test8Fails.push({ ...student, fromYear: year.simYear });
+			}
+		}
+	}
+	if (test8Fails.length) {
+		console.error("FAIL");
+		console.log(test8Fails);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
+
+	// --- TEST 9 --- //
+	console.log("Test 9 - Should not have any dropouts");
+	const test9Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test9Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			const studentDidDropout = student.didDropout;
+			if (studentDidDropout) {
+				test9Fails.push({ ...student, fromYear: year.simYear });
+			}
+		}
+	}
+	if (test9Fails.length) {
+		console.error("FAIL");
+		console.log(test9Fails);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
+
+	// --- TEST 10 --- //
+	console.log(
+		"Test 10 - Students took 4 years of core classes (eligable for AK scholarship)"
+	);
+	const test10Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test10Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			let hadCoresEachYear = true;
+			const maxYear = Math.min(student.grade, 12);
+			for (let i = 9; i <= maxYear; i++) {
+				const schoolYear = student.courseHistory[i];
+				const tookEnglish = schoolYear.find(
+					(course) => course.creditType === "english"
+				);
+				const tookMath = schoolYear.find(
+					(course) => course.creditType === "math"
+				);
+				const tookScience = schoolYear.find(
+					(course) => course.creditType === "science"
+				);
+				const tookSocial = schoolYear.find(
+					(course) => course.creditType === "social"
+				);
+				if (!tookEnglish || !tookMath || !tookScience || !tookSocial) {
+					hadCoresEachYear = false;
+				}
+			}
+			if (!hadCoresEachYear) {
+				test10Fails.push({ ...student, fromYear: year.simYear });
+			}
+		}
+	}
+	if (test10Fails.length) {
+		console.error("FAIL");
+		console.log(test10Fails);
 		console.log(
 			"---------------------------------------------------------------"
 		);

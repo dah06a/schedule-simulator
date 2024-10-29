@@ -1,18 +1,15 @@
 // New Call
 // Changing courses in the middle of the year is unlikely - but sometimes happens with seniors changing into easier classes if needed
-// Need to change Health - it does NOT earn science credits, it is it's own type of credit
 // Sometimes students skip English IV and go to English V based on credits, exams, and student assessments
 // If English IV ever reaches the max, then start giving chance of having student skip English IV and go to English V
 // This chance will be based on BOTH their prev. English credits AND MATH credit history - at least 3 math credits and has done geometry
 // If this is the case, move them into English V
 
 // Test Cases
-// Students should never have an empty period except local seniors - make option so that all students always have to have full periods
 // Try to make every kid eligable for AK scholorship
 // have access to 4 years of cores - (English, Math, SS, Science)
 
 // CURRENT ISSUES
-// Need extra logic for English, or any creditType where you need more than 3
 // Need mechanism for switching courses during the year
 // Need mechanism for adding/removing courses every other year
 // Need to write up all logic for Stephen ...
@@ -41,7 +38,6 @@
 // - senior target = 35 (usually between 20 - 40)
 
 // NEW SETTINGS
-
 // - total kids
 // - attrition rate per grade level
 // - min and max number of applicants per grade level
@@ -57,7 +53,7 @@ const settings = {
 	yearsOfSimulation: 20,
 	scheduleSystemNum: 4,
 	minIncomingFreshmen: 5,
-	maxIncomingFreshmen: 30,
+	maxIncomingFreshmen: 40,
 	sportCreditValue: 0.5,
 	minConsiderPass: 0.75,
 	fullConsiderPass: 1,
@@ -1450,7 +1446,7 @@ function getAvailablePeriods(curSchedule) {
 	return allPeriods.filter((period) => !enrolledPeriods.includes(period));
 }
 
-function chooseByScheduleOrPopularity(courses, nextCoursesNeeded) {
+function chooseByScheduleThenPopularity(courses, nextCoursesNeeded) {
 	if (courses.length === 1) {
 		return courses[0];
 	}
@@ -1564,7 +1560,7 @@ function chooseCourse(
 		(course) => course.gradePriority && course.gradePriority === studentGrade
 	);
 	if (priorityCourses.length) {
-		return chooseByScheduleOrPopularity(priorityCourses, nextCoursesNeeded);
+		return chooseByScheduleThenPopularity(priorityCourses, nextCoursesNeeded);
 	}
 
 	// Choose recovery courses if needed for credits that are missing from failed courses
@@ -1581,7 +1577,7 @@ function chooseCourse(
 			(course) => course.isRecovery && failedCredits.includes(course.creditType)
 		);
 		if (recoveryCourses.length) {
-			return chooseByScheduleOrPopularity(recoveryCourses, nextCoursesNeeded);
+			return chooseByScheduleThenPopularity(recoveryCourses, nextCoursesNeeded);
 		}
 	}
 
@@ -1594,12 +1590,12 @@ function chooseCourse(
 			pathwayCourseTitles.includes(course.title)
 		);
 		if (nextCourses.length) {
-			return chooseByScheduleOrPopularity(nextCourses, nextCoursesNeeded);
+			return chooseByScheduleThenPopularity(nextCourses, nextCoursesNeeded);
 		}
 	}
 
 	// Otherwise, if no cases are met, return a random course based on popularity
-	return chooseByScheduleOrPopularity(availableCourses, nextCoursesNeeded);
+	return chooseByScheduleThenPopularity(availableCourses, nextCoursesNeeded);
 }
 
 function getCourseRef(selectedCourse) {
@@ -1759,6 +1755,37 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 
 			// Try enrolling for each required course, then each credit type ordered by priority
 			for (const enrollmentType of orderedEnrollment) {
+				// If the student is already taking a required course,
+				// Then skip enrolling in that credit type
+				// Example:
+				// Student is already enrolled in AK History, so don't try to enroll in another social studies course
+				let curRequiredCourseTitle = null;
+				for (const requiredCourseTitle of Object.keys(
+					settings.graduationRequirements.courses
+				)) {
+					if (
+						studentSchedule.find(
+							(course) => course.title === requiredCourseTitle
+						)
+					) {
+						curRequiredCourseTitle = requiredCourseTitle;
+					}
+				}
+				if (curRequiredCourseTitle) {
+					const requiredCreditType = studentSchedule.find(
+						(course) => course.title === curRequiredCourseTitle
+					).creditType;
+					if (
+						enrollmentType.credit &&
+						enrollmentType.credit === requiredCreditType
+					) {
+						continue;
+					}
+				}
+
+				// Otherwise, check if the student needs this credit type or course,
+				// Then go through the enrollment process by finding available courses,
+				// And then selecting the course most appropriate
 				if (
 					(enrollmentType.credit &&
 						student.requirements.credits[enrollmentType.credit]) <
@@ -1807,7 +1834,6 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 						(course) => course.period === period
 					);
 
-					// WORKING HERE - WHY FAILURES WITH STUDENTS MISSING PERIOD 5 CLASSES???
 					const availableCourses = getAvailableCourses(
 						courseHistoryMap,
 						student.grade,
@@ -1821,6 +1847,10 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 						newYear.courses,
 						false
 					);
+
+					// WORKING HERE - Instead of just filling up schedule with "random" classes,
+					// try to fill so that student maintains all core classes instead (1 of eng, math, sci, soc each year)
+
 					if (!didEnroll && student.grade < 12) {
 						const newAvailableCourses = curPeriodCourses.filter(
 							(course) =>
