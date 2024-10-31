@@ -1,7 +1,5 @@
 // New Call
 // Changing courses in the middle of the year is unlikely - but sometimes happens with seniors changing into easier classes if needed
-// Sometimes students skip English IV and go to English V based on credits, exams, and student assessments
-// If English IV ever reaches the max, then start giving chance of having student skip English IV and go to English V
 // This chance will be based on BOTH their prev. English credits AND MATH credit history - at least 3 math credits and has done geometry
 // If this is the case, move them into English V
 
@@ -53,7 +51,7 @@ const settings = {
 	yearsOfSimulation: 20,
 	scheduleSystemNum: 4,
 	minIncomingFreshmen: 5,
-	maxIncomingFreshmen: 40,
+	maxIncomingFreshmen: 30,
 	sportCreditValue: 0.5,
 	minConsiderPass: 0.75,
 	fullConsiderPass: 1,
@@ -71,6 +69,7 @@ const settings = {
 		"physical",
 		"elective",
 	],
+	coreCredits: ["english", "math", "science", "social"],
 };
 settings.creditValue = 1 / settings.scheduleSystemNum;
 settings.graduationRequirements = {
@@ -1383,7 +1382,11 @@ function getCourseHistoryMap(student) {
 	const courseHistoryMap = {};
 	for (const year of Object.values(student.courseHistory)) {
 		for (const course of year) {
-			courseHistoryMap[course.title] = course.creditsEarned;
+			if (courseHistoryMap[course.title]) {
+				courseHistoryMap[course.title] += course.creditsEarned;
+			} else {
+				courseHistoryMap[course.title] = course.creditsEarned;
+			}
 		}
 	}
 
@@ -1394,9 +1397,9 @@ function getAvailableCourses(
 	courseHistoryMap,
 	studentGrade,
 	curSchedule,
-	curYearCourses
+	curCourses
 ) {
-	return curYearCourses.filter((course) => {
+	return curCourses.filter((course) => {
 		const courseIsNotFull = course.students.length < course.maxSize;
 		const notAlreadyInSchedule = !curSchedule.find(
 			(c) => c.title === course.title
@@ -1410,7 +1413,7 @@ function getAvailableCourses(
 		const isNewOrRepeatable =
 			course.isRepeatable ||
 			!courseHistoryMap[course.title] ||
-			courseHistoryMap[course.title] < settings.fullConsiderPass;
+			courseHistoryMap[course.title] < settings.minConsiderPass;
 
 		let meetsGradeRequirements = true;
 		let meetsCourseRequirements = true;
@@ -1632,8 +1635,12 @@ function enrollStudent(
 	const nextCoursesNeeded = compareNextCourses
 		? allCourses.filter(
 				(course) =>
-					nextCourseTitles.includes(course.title) &&
-					!studentSchedule.find((c) => c.title === course.title)
+					// Special case added here to allow skipping into English V when English IV is full
+					(course.title === "English IV" &&
+						!availableCourses.includes("English IV") &&
+						availableCourses.includes("English V")) ||
+					(nextCourseTitles.includes(course.title) &&
+						!studentSchedule.find((c) => c.title === course.title))
 		  )
 		: [];
 	if (availableCourses.length) {
@@ -1755,10 +1762,10 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 
 			// Try enrolling for each required course, then each credit type ordered by priority
 			for (const enrollmentType of orderedEnrollment) {
-				// If the student is already taking a required course,
-				// Then skip enrolling in that credit type
-				// Example:
-				// Student is already enrolled in AK History, so don't try to enroll in another social studies course
+				// If the student is taking a required course,
+				// Then skip enrolling in the credit type of that course again
+				// Example: Student is already enrolled in AK History, so don't try to enroll in another social studies course
+				// NOTE: Only finding 1 required course, can improve for more generic function by using array and checking all
 				let curRequiredCourseTitle = null;
 				for (const requiredCourseTitle of Object.keys(
 					settings.graduationRequirements.courses
@@ -1807,14 +1814,14 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 						studentSchedule,
 						courseOptions
 					);
-					const didEnrollCourse = enrollStudent(
+					const didEnroll = enrollStudent(
 						availableCourses,
 						studentSchedule,
 						student,
 						newYear.courses,
 						true
 					);
-					if (!didEnrollCourse && student.grade > 11) {
+					if (!didEnroll && student.grade > 11) {
 						newYear.issues.push({
 							student: student,
 							type: "credits",
@@ -1826,14 +1833,49 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 				}
 			}
 
-			// Then enroll in courses for any remaining empty periods
+			// Next, try to fill any empty periods with core classes
+			// const firstRemainingPeriods = getAvailablePeriods(studentSchedule);
+			// if (firstRemainingPeriods.length && student.grade < 13) {
+			// 	const missingCoreCredits = [...settings.coreCredits].filter(
+			// 		(creditType) =>
+			// 			!studentSchedule.find((course) => course.creditType === creditType)
+			// 	);
+			// 	if (missingCoreCredits.length) {
+			// 		for (const creditType of missingCoreCredits) {
+			// 			const curCreditCourses = newYear.courses.filter(
+			// 				(course) => course.creditType === creditType
+			// 			);
+			// 			const availableCourses = getAvailableCourses(
+			// 				courseHistoryMap,
+			// 				student.grade,
+			// 				studentSchedule,
+			// 				curCreditCourses
+			// 			);
+			// 			const didEnroll = enrollStudent(
+			// 				availableCourses,
+			// 				studentSchedule,
+			// 				student,
+			// 				newYear.courses,
+			// 				false
+			// 			);
+			// 			if (!didEnroll && student.grade < 13) {
+			// 				newYear.issues.push({
+			// 					student: student,
+			// 					type: "cores",
+			// 					message: `Student could not find course to have all core classes in schedule ${creditType}`,
+			// 				});
+			// 			}
+			// 		}
+			// 	}
+			// }
+
+			// Finally enroll in courses for any remaining empty periods with any classes available
 			const remainingPeriods = getAvailablePeriods(studentSchedule);
 			if (remainingPeriods.length && student.grade < 13) {
 				for (const period of remainingPeriods) {
 					const curPeriodCourses = newYear.courses.filter(
 						(course) => course.period === period
 					);
-
 					const availableCourses = getAvailableCourses(
 						courseHistoryMap,
 						student.grade,
@@ -1847,30 +1889,12 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 						newYear.courses,
 						false
 					);
-
-					// WORKING HERE - Instead of just filling up schedule with "random" classes,
-					// try to fill so that student maintains all core classes instead (1 of eng, math, sci, soc each year)
-
 					if (!didEnroll && student.grade < 12) {
-						const newAvailableCourses = curPeriodCourses.filter(
-							(course) =>
-								!studentSchedule.find((c) => c.title === course.title) &&
-								course.students.length < course.maxSize
-						);
-						const newEnroll = enrollStudent(
-							newAvailableCourses,
-							studentSchedule,
-							student,
-							newYear.courses,
-							false
-						);
-						if (!newEnroll && student.grade < 12) {
-							newYear.issues.push({
-								student: student,
-								type: "empty",
-								message: `Empty ${period}th period block for ${student.grade}th grader`,
-							});
-						}
+						newYear.issues.push({
+							student: student,
+							type: "empty",
+							message: `Empty ${period}th period block for ${student.grade}th grader`,
+						});
 					}
 				}
 			}
