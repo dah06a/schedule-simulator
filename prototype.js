@@ -1,28 +1,18 @@
-// New Call
+// IDEAS
+// Instead of the current model, there is another way to try and enroll/create student schedules
+// Start by figuring out what classes a student needs for current year - make a list of courses except electives
+// Then, try many times to see if there is a way for all those class to be taken this year
+// If so, then back-fill any remaining periods with electives
+// If not, retry with other core classes or options - if no solution is found, remove 1 class and repeat process
+
+// TO DO ...
 // Changing courses in the middle of the year is unlikely - but sometimes happens with seniors changing into easier classes if needed
-// This chance will be based on BOTH their prev. English credits AND MATH credit history - at least 3 math credits and has done geometry
-// If this is the case, move them into English V
-
-// Test Cases
-// Try to make every kid eligable for AK scholorship
-// have access to 4 years of cores - (English, Math, SS, Science)
-
-// CURRENT ISSUES
 // Need mechanism for switching courses during the year
 // Need mechanism for adding/removing courses every other year
 // Need to write up all logic for Stephen ...
-
-// CALL
 // If freshman fails a quarter of English - then next year, enroll in English to make up that credit
 // BUT - then switch courses after credits are made up
 // Make a way to "flag" students who are in danger of failing each year if not "whole"
-
-// ADDITIONAL FEATURES TO ADD
-// simulate student switching courses middle of year
-// simulate students entering district middle of year
-
-// MORE METRICS TO REPORT:
-// where are the bottlenecks ...
 
 // Curveballs
 // - kids enter in middle of year - min of 60 students total that enter, max of 100 (but max is very rare) - more like 80 normally
@@ -1037,6 +1027,25 @@ function generateCourses() {
 			nextCourse: "Band",
 			gradePriority: null,
 		},
+		{
+			title: "Personal Finance",
+			creditType: "math",
+			instructor: "Mr. X",
+			isRecovery: false,
+			period: 5,
+			passRate: 0.95,
+			passCount: 0,
+			maxSize: 15,
+			isRepeatable: true,
+			students: [],
+			requirements: {
+				courses: [],
+				grade: null,
+			},
+			popularity: 1,
+			nextCourse: null,
+			gradePriority: null,
+		},
 	];
 }
 
@@ -1792,7 +1801,7 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 
 				// Otherwise, check if the student needs this credit type or course,
 				// Then go through the enrollment process by finding available courses,
-				// And then selecting the course most appropriate
+				// and then selecting the course most appropriate
 				if (
 					(enrollmentType.credit &&
 						student.requirements.credits[enrollmentType.credit]) <
@@ -1834,40 +1843,40 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 			}
 
 			// Next, try to fill any empty periods with core classes
-			// const firstRemainingPeriods = getAvailablePeriods(studentSchedule);
-			// if (firstRemainingPeriods.length && student.grade < 13) {
-			// 	const missingCoreCredits = [...settings.coreCredits].filter(
-			// 		(creditType) =>
-			// 			!studentSchedule.find((course) => course.creditType === creditType)
-			// 	);
-			// 	if (missingCoreCredits.length) {
-			// 		for (const creditType of missingCoreCredits) {
-			// 			const curCreditCourses = newYear.courses.filter(
-			// 				(course) => course.creditType === creditType
-			// 			);
-			// 			const availableCourses = getAvailableCourses(
-			// 				courseHistoryMap,
-			// 				student.grade,
-			// 				studentSchedule,
-			// 				curCreditCourses
-			// 			);
-			// 			const didEnroll = enrollStudent(
-			// 				availableCourses,
-			// 				studentSchedule,
-			// 				student,
-			// 				newYear.courses,
-			// 				false
-			// 			);
-			// 			if (!didEnroll && student.grade < 13) {
-			// 				newYear.issues.push({
-			// 					student: student,
-			// 					type: "cores",
-			// 					message: `Student could not find course to have all core classes in schedule ${creditType}`,
-			// 				});
-			// 			}
-			// 		}
-			// 	}
-			// }
+			const firstRemainingPeriods = getAvailablePeriods(studentSchedule);
+			if (firstRemainingPeriods.length && student.grade < 13) {
+				const missingCoreCredits = [...settings.coreCredits].filter(
+					(creditType) =>
+						!studentSchedule.find((course) => course.creditType === creditType)
+				);
+				if (missingCoreCredits.length) {
+					for (const creditType of missingCoreCredits) {
+						const curCreditCourses = newYear.courses.filter(
+							(course) => course.creditType === creditType
+						);
+						const availableCourses = getAvailableCourses(
+							courseHistoryMap,
+							student.grade,
+							studentSchedule,
+							curCreditCourses
+						);
+						const didEnroll = enrollStudent(
+							availableCourses,
+							studentSchedule,
+							student,
+							newYear.courses,
+							false
+						);
+						if (!didEnroll && student.grade < 13) {
+							newYear.issues.push({
+								student: student,
+								type: "cores",
+								message: `Student could not find course to have all core classes in schedule ${creditType}`,
+							});
+						}
+					}
+				}
+			}
 
 			// Finally enroll in courses for any remaining empty periods with any classes available
 			const remainingPeriods = getAvailablePeriods(studentSchedule);

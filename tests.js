@@ -156,7 +156,7 @@ export default function runAllTests(allYearsReport) {
 				continue;
 			}
 			let studentYear = 9;
-			let maxYear = Math.min(student.grade, 13);
+			let maxYear = Math.min(student.grade, 12);
 			while (studentYear <= maxYear) {
 				const studentInFailList = test5Fails.find((s) => s.id === student.id);
 				if (

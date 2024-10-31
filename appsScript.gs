@@ -67,11 +67,13 @@ function simulateSchedule() {
 		}
 		curRow.setValues([metricVals]);
 	}
+	runAllTests(allYearsReport);
 }
 
 function collectSettings(rawSettings) {
 	const settings = {
 		orderedCredits: [],
+		coreCredits: [],
 	};
 	const graduationRequirements = {
 		credits: {},
@@ -109,11 +111,15 @@ function collectSettings(rawSettings) {
 			const creditName = row[0].trim();
 			const creditValue = row[1];
 			const creditRank = Number(row[2]);
+			const creditIsCore = Boolean(row[3]);
 			graduationRequirements.credits[creditName] = creditValue;
 			settings.orderedCredits.push({
 				creditType: creditName,
 				rank: creditRank,
 			});
+			if (creditIsCore) {
+				settings.coreCredits.push(creditName);
+			}
 			continue;
 		}
 		if (collectRequiredCourses) {
@@ -426,11 +432,10 @@ function createStudents(numOfStudents = 25) {
 	const students = [];
 	for (let i = 0; i < numOfStudents; i++) {
 		const newStudent = generateStudent();
-		const randEnglishCreditChance = Math.random();
+		const randEnglishChance = Math.random();
+		const randAlgebraChance = Math.random();
 		const randMathCreditChance = Math.random();
-		if (randEnglishCreditChance < settings.chanceOfStartingEnglishCredit) {
-			newStudent.requirements.credits["english"] +=
-				settings.creditValue * settings.scheduleSystemNum;
+		if (randEnglishChance < settings.chanceOfStartingEnglishII) {
 			newStudent.courseHistory["8"].push({
 				title: "English I",
 				creditType: "english",
@@ -441,6 +446,20 @@ function createStudents(numOfStudents = 25) {
 		if (randMathCreditChance < settings.chanceOfStartingMathCredit) {
 			newStudent.requirements.credits["math"] +=
 				settings.creditValue * settings.scheduleSystemNum;
+			newStudent.courseHistory["8"].push(
+				{
+					title: "Pre-Algebra",
+					creditType: "math",
+					creditsEarned: 1,
+				},
+				{
+					title: "Algebra I",
+					creditType: "math",
+					nextCourse: "Geometry",
+					creditsEarned: 1,
+				}
+			);
+		} else if (randAlgebraChance < settings.chanceOfStartingAlgebra) {
 			newStudent.courseHistory["8"].push({
 				title: "Pre-Algebra",
 				creditType: "math",
@@ -492,7 +511,11 @@ function getCourseHistoryMap(student) {
 	const courseHistoryMap = {};
 	for (const year of Object.values(student.courseHistory)) {
 		for (const course of year) {
-			courseHistoryMap[course.title] = course.creditsEarned;
+			if (courseHistoryMap[course.title]) {
+				courseHistoryMap[course.title] += course.creditsEarned;
+			} else {
+				courseHistoryMap[course.title] = course.creditsEarned;
+			}
 		}
 	}
 
@@ -503,9 +526,9 @@ function getAvailableCourses(
 	courseHistoryMap,
 	studentGrade,
 	curSchedule,
-	curYearCourses
+	curCourses
 ) {
-	return curYearCourses.filter((course) => {
+	return curCourses.filter((course) => {
 		const courseIsNotFull = course.students.length < course.maxSize;
 		const notAlreadyInSchedule = !curSchedule.find(
 			(c) => c.title === course.title
@@ -513,13 +536,13 @@ function getAvailableCourses(
 		const periodIsAvailable = getAvailablePeriods(curSchedule).includes(
 			course.period
 		);
-		const isNotHigherGradePriority =
+		const matchesGradePriority =
 			!course.gradePriority || studentGrade >= course.gradePriority;
 
 		const isNewOrRepeatable =
 			course.isRepeatable ||
 			!courseHistoryMap[course.title] ||
-			courseHistoryMap[course.title] < settings.fullConsiderPass;
+			courseHistoryMap[course.title] < settings.minConsiderPass;
 
 		let meetsGradeRequirements = true;
 		let meetsCourseRequirements = true;
@@ -538,7 +561,7 @@ function getAvailableCourses(
 			courseIsNotFull &&
 			notAlreadyInSchedule &&
 			periodIsAvailable &&
-			isNotHigherGradePriority &&
+			matchesGradePriority &&
 			isNewOrRepeatable &&
 			meetsAllRequirements
 		) {
@@ -548,18 +571,58 @@ function getAvailableCourses(
 	});
 }
 
+// NEED TO UPDATE THIS FUNCTION TO BE DYNAMIC BASED ON SCHEDULE
 function getAvailablePeriods(curSchedule) {
 	const allPeriods = [1, 2, 3, 4, 5, 6];
 	const enrolledPeriods = curSchedule.map((course) => course.period);
 	return allPeriods.filter((period) => !enrolledPeriods.includes(period));
 }
 
-function chooseRandCourseByPopularity(courses) {
+function chooseByScheduleThenPopularity(courses, nextCoursesNeeded) {
 	if (courses.length === 1) {
 		return courses[0];
 	}
+	let courseList = courses;
+
+	// Try to choose more intelligently, by not selecting a course that has a known conflict with another needed course
+	// If there are no choices available without a conflict, choose course with min number of conflicts
+	// Example:
+	// - Choosing between two "English II" courses
+	// - But the student will also need to take "Geometry" this year
+	// - One of the "English II" options is the same period as the only "Geometry" course
+	// - So, pick the other option which does NOT have a conflict with "Geometry"
+	nextCoursesNeeded = nextCoursesNeeded.filter(
+		(course) => !courses.find((c) => c.title === course.title)
+	);
+	if (nextCoursesNeeded.length) {
+		const coursesCopy = [...courses];
+		for (const course of coursesCopy) {
+			let conflictingPeriods = 0;
+			for (const nextCourse of nextCoursesNeeded) {
+				if (course.period === nextCourse.period) {
+					conflictingPeriods++;
+				}
+			}
+			course.conflicts = conflictingPeriods;
+		}
+		const coursesWithoutConflict = coursesCopy.filter(
+			(course) => course.conflicts === 0
+		);
+		if (coursesWithoutConflict.length) {
+			courseList = coursesWithoutConflict;
+		} else {
+			const minConflicts = Math.min(
+				...coursesCopy.map((course) => course.conflicts)
+			);
+			const coursesWithMinConflicts = coursesCopy.filter(
+				(course) => course.conflicts <= minConflicts
+			);
+			courseList = coursesWithMinConflicts;
+		}
+	}
+
 	const chooseList = [];
-	for (const course of courses) {
+	for (const course of courseList) {
 		for (let i = 0; i < course.popularity; i++) {
 			chooseList.push(course);
 		}
@@ -579,7 +642,7 @@ function assignCredits(course, curRequirements) {
 		curRequirements.credits.elective += settings.creditValue;
 	}
 
-	// Assign credits for the special courses required for graduation (AK History, Health Government)
+	// Assign credits for the special courses required for graduation (AK History, Health, Government)
 	if (course.title in settings.graduationRequirements.courses) {
 		if (
 			curRequirements.courses[course.title] <
@@ -611,7 +674,12 @@ function checkDidGraduate(studentRequirements) {
 	return meetsCreditRequirements && meetsCourseRequirements;
 }
 
-function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
+function chooseCourse(
+	availableCourses,
+	studentGrade,
+	prevYearCourseHistory,
+	nextCoursesNeeded
+) {
 	if (!availableCourses.length) {
 		console.error(
 			"Tried to choose course when there were no available courses"
@@ -624,7 +692,7 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 		(course) => course.gradePriority && course.gradePriority === studentGrade
 	);
 	if (priorityCourses.length) {
-		return chooseRandCourseByPopularity(priorityCourses);
+		return chooseByScheduleThenPopularity(priorityCourses, nextCoursesNeeded);
 	}
 
 	// Choose recovery courses if needed for credits that are missing from failed courses
@@ -641,12 +709,11 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 			(course) => course.isRecovery && failedCredits.includes(course.creditType)
 		);
 		if (recoveryCourses.length) {
-			return chooseRandCourseByPopularity(recoveryCourses);
+			return chooseByScheduleThenPopularity(recoveryCourses, nextCoursesNeeded);
 		}
 	}
 
 	// Next, pick a course based on current pathways (Example:  English I -> English II)
-	// NEED TO INVESTIGATE WHY THIS DOESN'T ALWAYS WORK ...
 	const pathwayCourseTitles = prevYearCourseHistory
 		.filter((course) => course.nextCourse)
 		.map((course) => course.nextCourse);
@@ -655,12 +722,12 @@ function chooseCourse(availableCourses, studentGrade, prevYearCourseHistory) {
 			pathwayCourseTitles.includes(course.title)
 		);
 		if (nextCourses.length) {
-			return chooseRandCourseByPopularity(nextCourses);
+			return chooseByScheduleThenPopularity(nextCourses, nextCoursesNeeded);
 		}
 	}
 
 	// Otherwise, if no cases are met, return a random course based on popularity
-	return chooseRandCourseByPopularity(availableCourses);
+	return chooseByScheduleThenPopularity(availableCourses, nextCoursesNeeded);
 }
 
 function getCourseRef(selectedCourse) {
@@ -683,13 +750,34 @@ function getStudentRef(student) {
 	};
 }
 
-function enrollStudent(availableCourses, studentSchedule, student) {
+function enrollStudent(
+	availableCourses,
+	studentSchedule,
+	student,
+	allCourses,
+	compareNextCourses
+) {
+	// Find cases where there is a next course needed, but only 1
+	const nextCourseTitles = student.courseHistory[student.grade - 1]
+		.filter((course) => course.nextCourse)
+		.map((c) => c.nextCourse);
+	const nextCoursesNeeded = compareNextCourses
+		? allCourses.filter(
+				(course) =>
+					// Special case added here to allow skipping into English V when English IV is full
+					(course.title === "English IV" &&
+						!availableCourses.includes("English IV") &&
+						availableCourses.includes("English V")) ||
+					(nextCourseTitles.includes(course.title) &&
+						!studentSchedule.find((c) => c.title === course.title))
+		  )
+		: [];
 	if (availableCourses.length) {
 		const selectedCourse = chooseCourse(
 			availableCourses,
 			student.grade,
 			student.courseHistory[student.grade - 1],
-			studentSchedule
+			nextCoursesNeeded
 		);
 		const courseRef = getCourseRef(selectedCourse);
 		studentSchedule.push(courseRef);
@@ -722,14 +810,6 @@ function collectMetrics(newYear) {
 		const avg = Math.round(maxSize.totalStudents / maxSize.totalCourses);
 		maxSize.avgCourseSize = avg;
 	}
-	console.log(
-		"DROPOUT LIST:",
-		newYear.students.filter((student) => student.didDropout)
-	);
-	console.log(
-		"EMPTY COURSES:",
-		newYear.courses.filter((course) => !course.students.length)
-	);
 	const emptyCourses = newYear.courses.filter(
 		(course) => !course.students.length
 	);
@@ -800,24 +880,48 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 		for (const student of curStudents) {
 			const courseHistoryMap = getCourseHistoryMap(student);
 			const studentSchedule = [];
-			const creditSkipList = [];
 			const orderedCreditList = settings.orderedCredits.map((creditType) => ({
-				course: "",
+				course: null,
 				credit: creditType,
 			}));
 			const orderedCourseList = Object.keys(
 				settings.graduationRequirements.courses
-			).map((courseTitle) => ({ course: courseTitle, credit: "" }));
+			).map((courseTitle) => ({ course: courseTitle, credit: null }));
 			const orderedEnrollment = [...orderedCourseList, ...orderedCreditList];
 
 			// Try enrolling for each required course, then each credit type ordered by priority
 			for (const enrollmentType of orderedEnrollment) {
-				if (
-					enrollmentType.credit &&
-					creditSkipList.includes(enrollmentType.credit)
-				) {
-					continue;
+				// If the student is taking a required course,
+				// Then skip enrolling in the credit type of that course again
+				// Example: Student is already enrolled in AK History, so don't try to enroll in another social studies course
+				// NOTE: Only finding 1 required course, can improve for more generic function by using array and checking all
+				let curRequiredCourseTitle = null;
+				for (const requiredCourseTitle of Object.keys(
+					settings.graduationRequirements.courses
+				)) {
+					if (
+						studentSchedule.find(
+							(course) => course.title === requiredCourseTitle
+						)
+					) {
+						curRequiredCourseTitle = requiredCourseTitle;
+					}
 				}
+				if (curRequiredCourseTitle) {
+					const requiredCreditType = studentSchedule.find(
+						(course) => course.title === curRequiredCourseTitle
+					).creditType;
+					if (
+						enrollmentType.credit &&
+						enrollmentType.credit === requiredCreditType
+					) {
+						continue;
+					}
+				}
+
+				// Otherwise, check if the student needs this credit type or course,
+				// Then go through the enrollment process by finding available courses,
+				// and then selecting the course most appropriate
 				if (
 					(enrollmentType.credit &&
 						student.requirements.credits[enrollmentType.credit]) <
@@ -839,16 +943,14 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 						studentSchedule,
 						courseOptions
 					);
-					const didEnrollCourse = enrollStudent(
+					const didEnroll = enrollStudent(
 						availableCourses,
 						studentSchedule,
 						student,
-						creditSkipList
+						newYear.courses,
+						true
 					);
-					if (didEnrollCourse && enrollmentType.course) {
-						creditSkipList.push(didEnrollCourse.creditType);
-					}
-					if (!didEnrollCourse && student.grade > 11) {
+					if (!didEnroll && student.grade > 11) {
 						newYear.issues.push({
 							student: student,
 							type: "credits",
@@ -860,8 +962,43 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 				}
 			}
 
-			// Then enroll in courses for any remaining empty periods
-			// ??? DO THIS AFTER ALL STUDENTS HAVE BEEN ENROLLED - NOT IN THIS LOOP ???
+			// Next, try to fill any empty periods with core classes
+			const firstRemainingPeriods = getAvailablePeriods(studentSchedule);
+			if (firstRemainingPeriods.length && student.grade < 13) {
+				const missingCoreCredits = [...settings.coreCredits].filter(
+					(creditType) =>
+						!studentSchedule.find((course) => course.creditType === creditType)
+				);
+				if (missingCoreCredits.length) {
+					for (const creditType of missingCoreCredits) {
+						const curCreditCourses = newYear.courses.filter(
+							(course) => course.creditType === creditType
+						);
+						const availableCourses = getAvailableCourses(
+							courseHistoryMap,
+							student.grade,
+							studentSchedule,
+							curCreditCourses
+						);
+						const didEnroll = enrollStudent(
+							availableCourses,
+							studentSchedule,
+							student,
+							newYear.courses,
+							false
+						);
+						if (!didEnroll && student.grade < 13) {
+							newYear.issues.push({
+								student: student,
+								type: "cores",
+								message: `Student could not find course to have all core classes in schedule ${creditType}`,
+							});
+						}
+					}
+				}
+			}
+
+			// Finally enroll in courses for any remaining empty periods with any classes available
 			const remainingPeriods = getAvailablePeriods(studentSchedule);
 			if (remainingPeriods.length && student.grade < 13) {
 				for (const period of remainingPeriods) {
@@ -877,7 +1014,9 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 					const didEnroll = enrollStudent(
 						availableCourses,
 						studentSchedule,
-						student
+						student,
+						newYear.courses,
+						false
 					);
 					if (!didEnroll && student.grade < 12) {
 						newYear.issues.push({
@@ -941,4 +1080,364 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 	const newMetrics = collectMetrics(newYear);
 	newYear.metrics = newMetrics;
 	allYearsReport.push(newYear);
+}
+
+function runAllTests(allYearsReport) {
+	// --- TEST 1 --- //
+	console.log("Test 1 - All freshman must take either English I or English II");
+	const test1Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test1Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			const freshmanEngish = student.courseHistory["9"].find(
+				(course) =>
+					course.title === "English I" || course.title === "English II"
+			);
+			if (!freshmanEngish) {
+				test1Fails.push({ ...student, fromYear: year.simYear });
+			}
+		}
+	}
+	if (test1Fails.length) {
+		console.error("FAIL");
+		console.log(test1Fails.length);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
+
+	// --- TEST 2 --- //
+	console.log(
+		"Test 2 - If freshman took English I in 8th grade, they should take English II in 9th grade"
+	);
+	const test2Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test2Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			const hasPriorEnglish = student.courseHistory["8"].find(
+				(course) => course.title === "English I"
+			);
+			const nowHasEnglishII = student.courseHistory["9"].find(
+				(course) => course.title === "English II"
+			);
+			if (hasPriorEnglish && !nowHasEnglishII) {
+				test2Fails.push({ ...student, fromYear: year.simYear });
+			}
+		}
+	}
+	if (test2Fails.length) {
+		console.error("FAIL");
+		console.log(test2Fails.length);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
+
+	// --- TEST 3 --- //
+	console.log(
+		"Test 3 - All freshman must take either Pre-Algebra, Algebra I, or Geometry"
+	);
+	const test3Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test3Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			const freshmanMath = student.courseHistory["9"].find(
+				(course) =>
+					course.title === "Pre-Algebra" ||
+					course.title === "Algebra I" ||
+					course.title === "Geometry"
+			);
+			if (!freshmanMath) {
+				test3Fails.push({ ...student, fromYear: year.simYear });
+			}
+		}
+	}
+	if (test3Fails.length) {
+		console.error("FAIL");
+		console.log(test3Fails.length);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
+
+	// --- TEST 4 --- //
+	console.log(
+		"Test 4 - If freshman took Math in 8th grade, they should take the next math course in 9th grade"
+	);
+	const test4Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test4Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			const hadPreAlgebra = student.courseHistory["8"].find(
+				(course) => course.title === "Pre-Algebra"
+			);
+			const hadAlgebraI = student.courseHistory["8"].find(
+				(course) => course.title === "Algebra I"
+			);
+			const nowHasAlgebraI = student.courseHistory["9"].find(
+				(course) => course.title === "Algebra I"
+			);
+			const nowHasGeometry = student.courseHistory["9"].find(
+				(course) => course.title === "Geometry"
+			);
+			if (hadAlgebraI && !nowHasGeometry) {
+				test4Fails.push({ ...student, fromYear: year.simYear });
+			} else if (hadPreAlgebra && !hadAlgebraI && !nowHasAlgebraI) {
+				test4Fails.push({ ...student, fromYear: year.simYear });
+			}
+		}
+	}
+	if (test4Fails.length) {
+		console.error("FAIL");
+		console.log(test4Fails.length);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
+
+	// --- TEST 5 --- //
+	console.log(
+		"Test 5 - Students should not have any empty periods, except for seniors"
+	);
+	const test5Fails = [];
+	const fullCourseLoad = 6;
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test5Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			let studentYear = 9;
+			let maxYear = Math.min(student.grade, 12);
+			while (studentYear <= maxYear) {
+				const studentInFailList = test5Fails.find((s) => s.id === student.id);
+				if (
+					student.courseHistory[studentYear].length < fullCourseLoad &&
+					!studentInFailList
+				) {
+					test5Fails.push({ ...student, fromYear: year.simYear });
+				}
+				studentYear++;
+			}
+		}
+	}
+	if (test5Fails.length) {
+		console.error("FAIL");
+		console.log(test5Fails.length);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
+
+	// --- TEST 6 --- //
+	console.log(
+		"Test 6 - Students should never have more than 6 classes in a schedule"
+	);
+	const test6Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test6Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			let studentYear = 8;
+			const maxClasses = 6;
+			while (studentYear < 14) {
+				const studentInFailList = test5Fails.find((s) => s.id === student.id);
+				if (
+					student.courseHistory[studentYear].length > maxClasses &&
+					!studentInFailList
+				) {
+					test6Fails.push({ ...student, fromYear: year.simYear });
+				}
+				studentYear++;
+			}
+		}
+	}
+	if (test6Fails.length) {
+		console.error("FAIL");
+		console.log(test6Fails.length);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
+
+	// --- TEST 7 --- //
+	console.log("Test 7 - All freshman must take a science class");
+	const test7Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test7Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			const freshmanScience = student.courseHistory["9"].find(
+				(course) => course.creditType === "science"
+			);
+			if (!freshmanScience) {
+				test7Fails.push({ ...student, fromYear: year.simYear });
+			}
+		}
+	}
+	if (test7Fails.length) {
+		console.error("FAIL");
+		console.log(test7Fails.length);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
+
+	// --- TEST 8 --- //
+	console.log("Test 8 - All freshman should take AK History");
+	const test8Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test8Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			const freshmanAkHistory = student.courseHistory["9"].find(
+				(course) => course.title === "Alaska History"
+			);
+			if (!freshmanAkHistory) {
+				test8Fails.push({ ...student, fromYear: year.simYear });
+			}
+		}
+	}
+	if (test8Fails.length) {
+		console.error("FAIL");
+		console.log(test8Fails.length);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
+
+	// --- TEST 9 --- //
+	console.log("Test 9 - Should not have any dropouts");
+	const test9Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test9Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			const studentDidDropout = student.didDropout;
+			if (studentDidDropout) {
+				test9Fails.push({ ...student, fromYear: year.simYear });
+			}
+		}
+	}
+	if (test9Fails.length) {
+		console.error("FAIL");
+		console.log(test9Fails.length);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
+
+	// --- TEST 10 --- //
+	console.log(
+		"Test 10 - Students took 4 years of core classes (eligable for AK scholarship)"
+	);
+	const test10Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const studentInFailList = test10Fails.find((s) => s.id === student.id);
+			if (studentInFailList) {
+				continue;
+			}
+			let hadCoresEachYear = true;
+			const maxYear = Math.min(student.grade, 12);
+			for (let i = 9; i <= maxYear; i++) {
+				const schoolYear = student.courseHistory[i];
+				const tookEnglish = schoolYear.find(
+					(course) => course.creditType === "english"
+				);
+				const tookMath = schoolYear.find(
+					(course) => course.creditType === "math"
+				);
+				const tookScience = schoolYear.find(
+					(course) => course.creditType === "science"
+				);
+				const tookSocial = schoolYear.find(
+					(course) => course.creditType === "social"
+				);
+				if (!tookEnglish || !tookMath || !tookScience || !tookSocial) {
+					hadCoresEachYear = false;
+				}
+			}
+			if (!hadCoresEachYear) {
+				test10Fails.push({ ...student, fromYear: year.simYear });
+			}
+		}
+	}
+	if (test10Fails.length) {
+		console.error("FAIL");
+		console.log(test10Fails.length);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
 }
