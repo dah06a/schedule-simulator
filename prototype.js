@@ -1734,7 +1734,7 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 	const newStudents = createStudents(randNumNewStudents);
 	const newYear = {
 		id: generateId(),
-		simYear: allYearsReport.length + 1,
+		simYear: allYearsReport.length - settings.scheduleSystemNum + 1,
 		courses: generateCourses(rawCourses, rawSchedule),
 		students: [...getAllActiveStudents(), ...newStudents],
 		issues: [],
@@ -1962,9 +1962,16 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 	allYearsReport.push(newYear);
 }
 
-for (let i = 0; i < settings.yearsOfSimulation; i++) {
+for (
+	let i = 0;
+	i < settings.yearsOfSimulation + settings.scheduleSystemNum;
+	i++
+) {
 	simulateSchoolYear();
 }
 
+for (let i = 0; i < settings.scheduleSystemNum; i++) {
+	allYearsReport.shift();
+}
 console.log(allYearsReport);
 runAllTests(allYearsReport);

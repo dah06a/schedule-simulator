@@ -1,5 +1,9 @@
 const allYearsReport = [];
-settings = {};
+let settings = {};
+const globalMetrics = {
+	testResults: [],
+	courseData: {},
+};
 
 function simulateSchedule() {
 	const allSheets = SpreadsheetApp.getActiveSpreadsheet();
@@ -14,8 +18,15 @@ function simulateSchedule() {
 	const rawCourses = coursesTab.getDataRange().getValues();
 	const rawSchedule = scheduleTab.getDataRange().getValues();
 
-	for (let i = 0; i < settings.yearsOfSimulation; i++) {
+	for (
+		let i = 0;
+		i < settings.yearsOfSimulation + settings.scheduleSystemNum;
+		i++
+	) {
 		simulateSchoolYear(rawCourses, rawSchedule);
+	}
+	for (let i = 0; i < settings.scheduleSystemNum; i++) {
+		allYearsReport.shift();
 	}
 
 	const dateTimeStr = new Date().toLocaleString();
@@ -39,14 +50,16 @@ function simulateSchedule() {
 	for (const courseMax of allYearsReport[0].metrics.courseSizeAvgs) {
 		headers.push(`Avg. Class Size of Max-${courseMax.maxSize}`);
 	}
+	newSheet.setColumnWidths(1, headers.length, 150);
 	const headerRow = newSheet.getRange(1, 1, 1, headers.length);
 	headerRow.setValues([headers]);
 	headerRow.setBackground("lightblue");
 	headerRow.setFontWeight("bold");
 
 	for (let i = 2; i < allYearsReport.length + 2; i++) {
-		const curMetrics = allYearsReport[i - 2].metrics;
-		const simYear = allYearsReport[i - 2].simYear;
+		const curYearData = allYearsReport[i - 2];
+		const curMetrics = curYearData.metrics;
+		const simYear = curYearData.simYear;
 		const curRow = newSheet.getRange(i, 1, 1, headers.length);
 		const metricVals = [
 			simYear,
@@ -66,8 +79,28 @@ function simulateSchedule() {
 			metricVals.push(courseMax.avgCourseSize);
 		}
 		curRow.setValues([metricVals]);
+
+		for (const course of curYearData.courses) {
+			if (!globalMetrics[course.id]) {
+				globalMetrics[course.id] = {
+					title: course.title,
+					classSizes: [course.students.length],
+				};
+			} else {
+				globalMetrics[course.id].classSizes.push(course.students.length);
+			}
+		}
 	}
 	runAllTests(allYearsReport);
+	console.log(globalMetrics);
+
+	const newResultRow = newSheet.getRange(
+		allYearsReport.length + 2,
+		1,
+		rawSchedule.length,
+		rawSchedule[0].length
+	);
+	newResultRow.setValues(rawSchedule);
 }
 
 function collectSettings(rawSettings) {
@@ -854,7 +887,7 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 	const newStudents = createStudents(randNumNewStudents);
 	const newYear = {
 		id: generateId(),
-		simYear: allYearsReport.length + 1,
+		simYear: allYearsReport.length - settings.scheduleSystemNum + 1,
 		courses: generateCourses(rawCourses, rawSchedule),
 		students: [...getAllActiveStudents(), ...newStudents],
 		issues: [],
