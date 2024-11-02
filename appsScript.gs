@@ -16,7 +16,8 @@ function simulateSchedule() {
 	settings.creditValue = 1 / settings.scheduleSystemNum;
 
 	const rawCourses = coursesTab.getDataRange().getValues();
-	const rawSchedule = scheduleTab.getDataRange().getValues();
+	const scheduleData = scheduleTab.getDataRange();
+	const rawSchedule = scheduleData.getValues();
 
 	for (
 		let i = 0;
@@ -92,15 +93,69 @@ function simulateSchedule() {
 		}
 	}
 	runAllTests(allYearsReport);
-	console.log(globalMetrics);
 
-	const newResultRow = newSheet.getRange(
-		allYearsReport.length + 2,
+	// Copy all schedule data as-is, with formatting to new results sheet
+	const newRowNum = allYearsReport.length + 2;
+	const scheduleSimDataRange = newSheet.getRange(
+		newRowNum,
 		1,
 		rawSchedule.length,
 		rawSchedule[0].length
 	);
-	newResultRow.setValues(rawSchedule);
+	scheduleData.copyTo(scheduleSimDataRange);
+
+	// Set row height and data for new schedule data in results sheet
+	const lastScheduleRowNum = newRowNum + rawSchedule.length + 1;
+	for (let rowNum = newRowNum; rowNum < lastScheduleRowNum; rowNum++) {
+		newSheet.setRowHeight(rowNum, 100);
+	}
+
+	const scheduleDataBackgrounds = scheduleData.getBackgrounds();
+	for (let row = 1; row < rawSchedule.length; row++) {
+		for (let col = 1; col < rawSchedule[row].length; col++) {
+			const cellData = rawSchedule[row][col];
+			if (cellData && cellData.includes("id-")) {
+				const indexOfId = cellData.indexOf("id-") + 3;
+				const courseId = cellData.substring(indexOfId);
+				const classSizes = globalMetrics[courseId].classSizes;
+				let classAvg = 0;
+				if (classSizes.length) {
+					const total = classSizes.reduce((total, cur) => total + cur, 0);
+					classAvg = Math.round(total / classSizes.length);
+				}
+				const newData = cellData.replace(
+					/id-\d+/gm,
+					`Avg Class Size: ${classAvg}`
+				);
+				rawSchedule[row][col] = newData;
+
+				const yellow1 = "#FFFFCC";
+				const yellow2 = "#FFFF99";
+				const yellow3 = "#FFFF66";
+				const yellow4 = "#FFFF33";
+				const yellow5 = "#FFFF00";
+				let cellNewBgColor = scheduleDataBackgrounds[row][col];
+				if (classAvg > 0) {
+					cellNewBgColor = yellow1;
+				}
+				if (classAvg > 7) {
+					cellNewBgColor = yellow2;
+				}
+				if (classAvg > 13) {
+					cellNewBgColor = yellow3;
+				}
+				if (classAvg > 19) {
+					cellNewBgColor = yellow4;
+				}
+				if (classAvg > 25) {
+					cellNewBgColor = yellow5;
+				}
+				scheduleDataBackgrounds[row][col] = cellNewBgColor;
+			}
+		}
+	}
+	scheduleSimDataRange.setValues(rawSchedule);
+	scheduleSimDataRange.setBackgrounds(scheduleDataBackgrounds);
 }
 
 function collectSettings(rawSettings) {
