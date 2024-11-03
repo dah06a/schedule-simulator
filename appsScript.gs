@@ -92,7 +92,6 @@ function simulateSchedule() {
 			}
 		}
 	}
-	runAllTests(allYearsReport);
 
 	// Copy all schedule data as-is, with formatting to new results sheet
 	const newRowNum = allYearsReport.length + 2;
@@ -105,11 +104,12 @@ function simulateSchedule() {
 	scheduleData.copyTo(scheduleSimDataRange);
 
 	// Set row height and data for new schedule data in results sheet
-	const lastScheduleRowNum = newRowNum + rawSchedule.length + 1;
+	const lastScheduleRowNum = newRowNum + rawSchedule.length;
 	for (let rowNum = newRowNum; rowNum < lastScheduleRowNum; rowNum++) {
-		newSheet.setRowHeight(rowNum, 100);
+		newSheet.setRowHeight(rowNum, 70);
 	}
 
+	// Set backgrounds and averages for each class in schedule
 	const scheduleDataBackgrounds = scheduleData.getBackgrounds();
 	for (let row = 1; row < rawSchedule.length; row++) {
 		for (let col = 1; col < rawSchedule[row].length; col++) {
@@ -150,12 +150,23 @@ function simulateSchedule() {
 				if (classAvg > 25) {
 					cellNewBgColor = yellow5;
 				}
+				if (cellData.includes("Elementary")) {
+					console.log("HERE");
+				}
 				scheduleDataBackgrounds[row][col] = cellNewBgColor;
 			}
 		}
 	}
 	scheduleSimDataRange.setValues(rawSchedule);
 	scheduleSimDataRange.setBackgrounds(scheduleDataBackgrounds);
+	const allTestResults = runAllTests(allYearsReport);
+	const newTestResultsRange = newSheet.getRange(
+		lastScheduleRowNum + 2,
+		1,
+		allTestResults.length,
+		1
+	);
+	newTestResultsRange.setValues(allTestResults);
 }
 
 function collectSettings(rawSettings) {
@@ -1171,8 +1182,12 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 }
 
 function runAllTests(allYearsReport) {
+	const allTests = [];
+
 	// --- TEST 1 --- //
-	console.log("Test 1 - All freshman must take either English I or English II");
+	const test1Name =
+		"Test 1 - All freshman must take either English I or English II";
+	console.log(test1Name);
 	const test1Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
@@ -1190,12 +1205,16 @@ function runAllTests(allYearsReport) {
 		}
 	}
 	if (test1Fails.length) {
+		allTests.push([
+			`FAIL - ${test1Name} - (${test1Fails.length} problems found)`,
+		]);
 		console.error("FAIL");
 		console.log(test1Fails.length);
 		console.log(
 			"---------------------------------------------------------------"
 		);
 	} else {
+		allTests.push([`PASS - ${test1Name}`]);
 		console.log("PASS");
 		console.log(
 			"---------------------------------------------------------------"
@@ -1203,9 +1222,9 @@ function runAllTests(allYearsReport) {
 	}
 
 	// --- TEST 2 --- //
-	console.log(
-		"Test 2 - If freshman took English I in 8th grade, they should take English II in 9th grade"
-	);
+	const test2Name =
+		"Test 2 - If freshman took English I in 8th grade, they should take English II in 9th grade";
+	console.log(test2Name);
 	const test2Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
@@ -1225,12 +1244,16 @@ function runAllTests(allYearsReport) {
 		}
 	}
 	if (test2Fails.length) {
+		allTests.push([
+			`FAIL - ${test2Name} - (${test2Fails.length} problems found)`,
+		]);
 		console.error("FAIL");
 		console.log(test2Fails.length);
 		console.log(
 			"---------------------------------------------------------------"
 		);
 	} else {
+		allTests.push([`PASS - ${test2Name}`]);
 		console.log("PASS");
 		console.log(
 			"---------------------------------------------------------------"
@@ -1238,9 +1261,9 @@ function runAllTests(allYearsReport) {
 	}
 
 	// --- TEST 3 --- //
-	console.log(
-		"Test 3 - All freshman must take either Pre-Algebra, Algebra I, or Geometry"
-	);
+	const test3Name =
+		"Test 3 - All freshman must take either Pre-Algebra, Algebra I, or Geometry";
+	console.log(test3Name);
 	const test3Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
@@ -1260,12 +1283,16 @@ function runAllTests(allYearsReport) {
 		}
 	}
 	if (test3Fails.length) {
+		allTests.push([
+			`FAIL - ${test3Name} - (${test3Fails.length} problems found)`,
+		]);
 		console.error("FAIL");
 		console.log(test3Fails.length);
 		console.log(
 			"---------------------------------------------------------------"
 		);
 	} else {
+		allTests.push([`PASS - ${test3Name}`]);
 		console.log("PASS");
 		console.log(
 			"---------------------------------------------------------------"
@@ -1273,9 +1300,9 @@ function runAllTests(allYearsReport) {
 	}
 
 	// --- TEST 4 --- //
-	console.log(
-		"Test 4 - If freshman took Math in 8th grade, they should take the next math course in 9th grade"
-	);
+	const test4Name =
+		"Test 4 - If freshman took Math in 8th grade, they should take the next math course in 9th grade";
+	console.log(test4Name);
 	const test4Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
@@ -1303,12 +1330,16 @@ function runAllTests(allYearsReport) {
 		}
 	}
 	if (test4Fails.length) {
+		allTests.push([
+			`FAIL - ${test4Name} - (${test4Fails.length} problems found)`,
+		]);
 		console.error("FAIL");
 		console.log(test4Fails.length);
 		console.log(
 			"---------------------------------------------------------------"
 		);
 	} else {
+		allTests.push([`PASS - ${test4Name}`]);
 		console.log("PASS");
 		console.log(
 			"---------------------------------------------------------------"
@@ -1316,9 +1347,9 @@ function runAllTests(allYearsReport) {
 	}
 
 	// --- TEST 5 --- //
-	console.log(
-		"Test 5 - Students should not have any empty periods, except for seniors"
-	);
+	test5Name =
+		"Test 5 - Students should not have any empty periods, except for seniors";
+	console.log(test5Name);
 	const test5Fails = [];
 	const fullCourseLoad = 6;
 	for (const year of allYearsReport) {
@@ -1342,12 +1373,16 @@ function runAllTests(allYearsReport) {
 		}
 	}
 	if (test5Fails.length) {
+		allTests.push([
+			`FAIL - ${test5Name} - (${test5Fails.length} problems found)`,
+		]);
 		console.error("FAIL");
 		console.log(test5Fails.length);
 		console.log(
 			"---------------------------------------------------------------"
 		);
 	} else {
+		allTests.push([`PASS - ${test5Name}`]);
 		console.log("PASS");
 		console.log(
 			"---------------------------------------------------------------"
@@ -1355,9 +1390,9 @@ function runAllTests(allYearsReport) {
 	}
 
 	// --- TEST 6 --- //
-	console.log(
-		"Test 6 - Students should never have more than 6 classes in a schedule"
-	);
+	const test6Name =
+		"Test 6 - Students should never have more than 6 classes in a schedule";
+	console.log(test6Name);
 	const test6Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
@@ -1380,12 +1415,16 @@ function runAllTests(allYearsReport) {
 		}
 	}
 	if (test6Fails.length) {
+		allTests.push([
+			`FAIL - ${test6Name} - (${test6Fails.length} problems found)`,
+		]);
 		console.error("FAIL");
 		console.log(test6Fails.length);
 		console.log(
 			"---------------------------------------------------------------"
 		);
 	} else {
+		allTests.push([`PASS - ${test6Name}`]);
 		console.log("PASS");
 		console.log(
 			"---------------------------------------------------------------"
@@ -1393,7 +1432,8 @@ function runAllTests(allYearsReport) {
 	}
 
 	// --- TEST 7 --- //
-	console.log("Test 7 - All freshman must take a science class");
+	const test7Name = "Test 7 - All freshman must take a science class";
+	console.log(test7Name);
 	const test7Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
@@ -1410,12 +1450,16 @@ function runAllTests(allYearsReport) {
 		}
 	}
 	if (test7Fails.length) {
+		allTests.push([
+			`FAIL - ${test7Name} - (${test7Fails.length} problems found)`,
+		]);
 		console.error("FAIL");
 		console.log(test7Fails.length);
 		console.log(
 			"---------------------------------------------------------------"
 		);
 	} else {
+		allTests.push([`PASS - ${test7Name}`]);
 		console.log("PASS");
 		console.log(
 			"---------------------------------------------------------------"
@@ -1423,7 +1467,8 @@ function runAllTests(allYearsReport) {
 	}
 
 	// --- TEST 8 --- //
-	console.log("Test 8 - All freshman should take AK History");
+	const test8Name = "Test 8 - All freshman should take AK History";
+	console.log(test8Name);
 	const test8Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
@@ -1440,12 +1485,16 @@ function runAllTests(allYearsReport) {
 		}
 	}
 	if (test8Fails.length) {
+		allTests.push([
+			`FAIL - ${test8Name} - (${test8Fails.length} problems found)`,
+		]);
 		console.error("FAIL");
 		console.log(test8Fails.length);
 		console.log(
 			"---------------------------------------------------------------"
 		);
 	} else {
+		allTests.push([`PASS - ${test8Name}`]);
 		console.log("PASS");
 		console.log(
 			"---------------------------------------------------------------"
@@ -1453,7 +1502,8 @@ function runAllTests(allYearsReport) {
 	}
 
 	// --- TEST 9 --- //
-	console.log("Test 9 - Should not have any dropouts");
+	const test9Name = "Test 9 - Should not have any dropouts";
+	console.log(test9Name);
 	const test9Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
@@ -1468,12 +1518,16 @@ function runAllTests(allYearsReport) {
 		}
 	}
 	if (test9Fails.length) {
+		allTests.push([
+			`FAIL - ${test9Name} - (${test9Fails.length} problems found)`,
+		]);
 		console.error("FAIL");
 		console.log(test9Fails.length);
 		console.log(
 			"---------------------------------------------------------------"
 		);
 	} else {
+		allTests.push([`PASS - ${test9Name}`]);
 		console.log("PASS");
 		console.log(
 			"---------------------------------------------------------------"
@@ -1481,9 +1535,9 @@ function runAllTests(allYearsReport) {
 	}
 
 	// --- TEST 10 --- //
-	console.log(
-		"Test 10 - Students took 4 years of core classes (eligable for AK scholarship)"
-	);
+	const test10Name =
+		"Test 10 - Students took 4 years of core classes (eligable for AK scholarship)";
+	console.log(test10Name);
 	const test10Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
@@ -1517,15 +1571,20 @@ function runAllTests(allYearsReport) {
 		}
 	}
 	if (test10Fails.length) {
+		allTests.push([
+			`FAIL - ${test10Name} - (${test10Fails.length} problems found)`,
+		]);
 		console.error("FAIL");
 		console.log(test10Fails.length);
 		console.log(
 			"---------------------------------------------------------------"
 		);
 	} else {
+		allTests.push([`PASS - ${test10Name}`]);
 		console.log("PASS");
 		console.log(
 			"---------------------------------------------------------------"
 		);
 	}
+	return allTests;
 }
