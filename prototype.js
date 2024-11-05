@@ -43,7 +43,7 @@ const settings = {
 
 	maxTotalStudents: 140,
 	minIncomingFreshmen: 5,
-	maxIncomingFreshmen: 35,
+	maxIncomingFreshmen: 40,
 	minAttritionFreshmen: 0.1,
 	maxAttritionFreshmen: 0.4,
 	minIncomingSophomores: 20,
@@ -1429,19 +1429,18 @@ function getPrevStudentsAfterAttrition() {
 		),
 	};
 
-	// const studentsAfterAttrition = activeStudents.filter((student) => {
-	// 	if (student.grade < 9 || student.grade > 12) {
-	// 		return true;
-	// 	}
-	// 	const randDecimal = Number(Math.random().toFixed(2));
-	// 	if (randDecimal > attritionRates[student.grade]) {
-	// 		return true;
-	// 	}
-	// 	student.didDropout = true;
-	// 	return false;
-	// });
+	const studentsAfterAttrition = activeStudents.filter((student) => {
+		if (student.grade < 9 || student.grade > 12) {
+			return true;
+		}
+		const randDecimal = Number(Math.random().toFixed(2));
+		if (randDecimal > attritionRates[student.grade]) {
+			return true;
+		}
+		return false;
+	});
 
-	return activeStudents;
+	return studentsAfterAttrition;
 }
 
 function getStudentsByGrade(allStudents, grade) {
