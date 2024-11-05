@@ -40,8 +40,25 @@ const allYearsReport = [];
 const settings = {
 	yearsOfSimulation: 20,
 	scheduleSystemNum: 4,
+
+	maxTotalStudents: 140,
 	minIncomingFreshmen: 5,
-	maxIncomingFreshmen: 30,
+	maxIncomingFreshmen: 35,
+	minAttritionFreshmen: 0.1,
+	maxAttritionFreshmen: 0.4,
+	minIncomingSophomores: 20,
+	maxIncomingSophomores: 40,
+	minAttritionSophomores: 0.1,
+	maxAttritionSophomores: 0.3,
+	minIncomingJuniors: 20,
+	maxIncomingJuniors: 40,
+	minAttritionJuniors: 0.5,
+	maxAttritionJuniors: 0.2,
+	minIncomingSeniors: 20,
+	maxIncomingSeniors: 40,
+	minAttritionSeniors: 0,
+	maxAttritionSeniors: 0.1,
+
 	sportCreditValue: 0.5,
 	minConsiderPass: 0.75,
 	fullConsiderPass: 1,
@@ -342,7 +359,7 @@ function generateCourses() {
 			passRate: 0.95,
 			passCount: 0,
 			maxSize: 32,
-			isRepeatable: false,
+			isRepeatable: true,
 			students: [],
 			requirements: {
 				courses: ["Science I", "Science II"],
@@ -399,7 +416,7 @@ function generateCourses() {
 			passRate: 0.95,
 			passCount: 0,
 			maxSize: 32,
-			isRepeatable: false,
+			isRepeatable: true,
 			students: [],
 			requirements: {
 				courses: ["Science I", "Science II"],
@@ -439,7 +456,7 @@ function generateCourses() {
 			passRate: 0.95,
 			passCount: 0,
 			maxSize: 32,
-			isRepeatable: false,
+			isRepeatable: true,
 			students: [],
 			requirements: {
 				courses: [],
@@ -534,7 +551,7 @@ function generateCourses() {
 			passRate: 0.95,
 			passCount: 0,
 			maxSize: 32,
-			isRepeatable: false,
+			isRepeatable: true,
 			students: [],
 			requirements: {
 				courses: [],
@@ -1352,7 +1369,7 @@ function createStudents(numOfStudents = 25) {
 	return students;
 }
 
-function getAllActiveStudents() {
+function getPrevStudentsAfterAttrition() {
 	const prevGraduateIds = [];
 	const activeStudents = [];
 	const mostRecentYear = allYearsReport.length - 1;
@@ -1380,6 +1397,50 @@ function getAllActiveStudents() {
 			}
 		}
 	}
+
+	const attritionRates = {
+		9: Number(
+			(
+				Math.random() *
+					(settings.maxAttritionFreshmen - settings.minAttritionFreshmen) +
+				settings.minAttritionFreshmen
+			).toFixed(2)
+		),
+		10: Number(
+			(
+				Math.random() *
+					(settings.minAttritionSophomores - settings.minAttritionSophomores) +
+				settings.minAttritionSophomores
+			).toFixed(2)
+		),
+		11: Number(
+			(
+				Math.random() *
+					(settings.maxAttritionJuniors - settings.minAttritionJuniors) +
+				settings.minAttritionJuniors
+			).toFixed(2)
+		),
+		12: Number(
+			(
+				Math.random() *
+					(settings.maxAttritionSeniors - settings.minAttritionSeniors) +
+				settings.minAttritionSeniors
+			).toFixed(2)
+		),
+	};
+
+	// const studentsAfterAttrition = activeStudents.filter((student) => {
+	// 	if (student.grade < 9 || student.grade > 12) {
+	// 		return true;
+	// 	}
+	// 	const randDecimal = Number(Math.random().toFixed(2));
+	// 	if (randDecimal > attritionRates[student.grade]) {
+	// 		return true;
+	// 	}
+	// 	student.didDropout = true;
+	// 	return false;
+	// });
+
 	return activeStudents;
 }
 
@@ -1471,14 +1532,14 @@ function chooseByScheduleThenPopularity(courses, nextCoursesNeeded) {
 	// - But the student will also need to take "Geometry" this year
 	// - One of the "English II" options is the same period as the only "Geometry" course
 	// - So, pick the other option which does NOT have a conflict with "Geometry"
-	nextCoursesNeeded = nextCoursesNeeded.filter(
-		(course) => !courses.find((c) => c.title === course.title)
-	);
-	if (nextCoursesNeeded.length) {
-		const coursesCopy = [...courses];
+	const copyNextCoursesNeeded = JSON.parse(
+		JSON.stringify(nextCoursesNeeded)
+	).filter((course) => !courses.find((c) => c.title === course.title));
+	if (copyNextCoursesNeeded.length) {
+		const coursesCopy = JSON.parse(JSON.stringify(courses));
 		for (const course of coursesCopy) {
 			let conflictingPeriods = 0;
-			for (const nextCourse of nextCoursesNeeded) {
+			for (const nextCourse of copyNextCoursesNeeded) {
 				if (course.period === nextCourse.period) {
 					conflictingPeriods++;
 				}
@@ -1486,7 +1547,7 @@ function chooseByScheduleThenPopularity(courses, nextCoursesNeeded) {
 			course.conflicts = conflictingPeriods;
 		}
 		const coursesWithoutConflict = coursesCopy.filter(
-			(course) => course.conflicts === 0
+			(course) => !course.conflicts || course.conflicts === 0
 		);
 		if (coursesWithoutConflict.length) {
 			courseList = coursesWithoutConflict;
@@ -1736,7 +1797,7 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 		id: generateId(),
 		simYear: allYearsReport.length - settings.scheduleSystemNum + 1,
 		courses: generateCourses(rawCourses, rawSchedule),
-		students: [...getAllActiveStudents(), ...newStudents],
+		students: [...getPrevStudentsAfterAttrition(), ...newStudents],
 		issues: [],
 		metrics: {
 			numFreshmen: null,
