@@ -364,4 +364,35 @@ export default function runAllTests(allYearsReport) {
 			"---------------------------------------------------------------"
 		);
 	}
+
+	// --- TEST 11 --- //
+	console.log("Test 11 - All Sophomores should take Health");
+	const test11Fails = [];
+	for (const year of allYearsReport) {
+		for (const student of year.students) {
+			const isTransferStudent = student.isTransfer;
+			const studentInFailList = test11Fails.find((s) => s.id === student.id);
+			if (isTransferStudent || studentInFailList || student.grade < 10) {
+				continue;
+			}
+			const sophomoreHealth = student.courseHistory["10"].find(
+				(course) => course.title === "Health"
+			);
+			if (!sophomoreHealth) {
+				test11Fails.push({ ...student, fromYear: year.simYear });
+			}
+		}
+	}
+	if (test11Fails.length) {
+		console.error("FAIL");
+		console.log(test11Fails);
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	} else {
+		console.log("PASS");
+		console.log(
+			"---------------------------------------------------------------"
+		);
+	}
 }
