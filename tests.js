@@ -4,8 +4,9 @@ export default function runAllTests(allYearsReport) {
 	const test1Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
+			const isTransferStudent = student.isTransfer;
 			const studentInFailList = test1Fails.find((s) => s.id === student.id);
-			if (studentInFailList) {
+			if (isTransferStudent || studentInFailList) {
 				continue;
 			}
 			const freshmanEngish = student.courseHistory["9"].find(
@@ -37,8 +38,9 @@ export default function runAllTests(allYearsReport) {
 	const test2Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
+			const isTransferStudent = student.isTransfer;
 			const studentInFailList = test2Fails.find((s) => s.id === student.id);
-			if (studentInFailList) {
+			if (isTransferStudent || studentInFailList) {
 				continue;
 			}
 			const hasPriorEnglish = student.courseHistory["8"].find(
@@ -72,8 +74,9 @@ export default function runAllTests(allYearsReport) {
 	const test3Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
+			const isTransferStudent = student.isTransfer;
 			const studentInFailList = test3Fails.find((s) => s.id === student.id);
-			if (studentInFailList) {
+			if (isTransferStudent || studentInFailList) {
 				continue;
 			}
 			const freshmanMath = student.courseHistory["9"].find(
@@ -107,8 +110,9 @@ export default function runAllTests(allYearsReport) {
 	const test4Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
+			const isTransferStudent = student.isTransfer;
 			const studentInFailList = test4Fails.find((s) => s.id === student.id);
-			if (studentInFailList) {
+			if (isTransferStudent || studentInFailList) {
 				continue;
 			}
 			const hadPreAlgebra = student.courseHistory["8"].find(
@@ -151,13 +155,14 @@ export default function runAllTests(allYearsReport) {
 	const fullCourseLoad = 6;
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
+			const isTransferStudent = student.isTransfer;
 			const studentInFailList = test5Fails.find((s) => s.id === student.id);
-			if (studentInFailList) {
+			if (isTransferStudent || studentInFailList) {
 				continue;
 			}
 			let studentYear = 9;
 			let maxYear = Math.min(student.grade, 12);
-			while (studentYear <= maxYear) {
+			while (studentYear < maxYear) {
 				const studentInFailList = test5Fails.find((s) => s.id === student.id);
 				if (
 					student.courseHistory[studentYear].length < fullCourseLoad &&
@@ -225,8 +230,9 @@ export default function runAllTests(allYearsReport) {
 	const test7Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
+			const isTransferStudent = student.isTransfer;
 			const studentInFailList = test7Fails.find((s) => s.id === student.id);
-			if (studentInFailList) {
+			if (isTransferStudent || studentInFailList) {
 				continue;
 			}
 			const freshmanScience = student.courseHistory["9"].find(
@@ -255,8 +261,9 @@ export default function runAllTests(allYearsReport) {
 	const test8Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
+			const isTransferStudent = student.isTransfer;
 			const studentInFailList = test8Fails.find((s) => s.id === student.id);
-			if (studentInFailList) {
+			if (isTransferStudent || studentInFailList) {
 				continue;
 			}
 			const freshmanAkHistory = student.courseHistory["9"].find(
@@ -315,8 +322,9 @@ export default function runAllTests(allYearsReport) {
 	const test10Fails = [];
 	for (const year of allYearsReport) {
 		for (const student of year.students) {
+			const isTransferStudent = student.isTransfer;
 			const studentInFailList = test10Fails.find((s) => s.id === student.id);
-			if (studentInFailList) {
+			if (isTransferStudent || studentInFailList) {
 				continue;
 			}
 			let hadCoresEachYear = true;

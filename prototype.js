@@ -42,22 +42,23 @@ const settings = {
 	scheduleSystemNum: 4,
 
 	maxTotalStudents: 140,
-	minIncomingFreshmen: 5,
-	maxIncomingFreshmen: 40,
+	minIncomingFreshmen: 10,
+	maxIncomingFreshmen: 30,
 	minAttritionFreshmen: 0.1,
 	maxAttritionFreshmen: 0.4,
-	minIncomingSophomores: 20,
-	maxIncomingSophomores: 40,
+	minIncomingSophomores: 10,
+	maxIncomingSophomores: 30,
 	minAttritionSophomores: 0.1,
 	maxAttritionSophomores: 0.3,
-	minIncomingJuniors: 20,
-	maxIncomingJuniors: 40,
+	minIncomingJuniors: 10,
+	maxIncomingJuniors: 20,
 	minAttritionJuniors: 0.5,
 	maxAttritionJuniors: 0.2,
-	minIncomingSeniors: 20,
-	maxIncomingSeniors: 40,
+	minIncomingSeniors: 5,
+	maxIncomingSeniors: 10,
 	minAttritionSeniors: 0,
 	maxAttritionSeniors: 0.1,
+	newStudentCourseChance: 0.8,
 
 	sportCreditValue: 0.5,
 	minConsiderPass: 0.75,
@@ -1298,19 +1299,20 @@ function generateStudent() {
 		didGraduate: false,
 		didDropout: false,
 		earnedSport: false,
+		isTransfer: false,
 		requirements: {
 			credits: {
 				english: 0,
 				math: 0,
 				science: 0,
 				social: 0,
+				health: 0,
 				physical: 0,
 				vocEd: 0,
 				elective: 0,
 			},
 			courses: {
 				"Alaska History": 0,
-				Health: 0,
 				Government: 0,
 			},
 		},
@@ -1325,7 +1327,7 @@ function generateStudent() {
 	};
 }
 
-function createStudents(numOfStudents = 25) {
+function createNewFreshmen(numOfStudents) {
 	const students = [];
 	for (let i = 0; i < numOfStudents; i++) {
 		const newStudent = generateStudent();
@@ -1367,6 +1369,126 @@ function createStudents(numOfStudents = 25) {
 		students.push(newStudent);
 	}
 	return students;
+}
+
+function getTransferHistory(idealHistory) {
+	return idealHistory
+		.map((course) => getCourseRef(course))
+		.filter((_) => {
+			const randChance = Math.random();
+			if (settings.newStudentCourseChance > randChance) {
+				return true;
+			}
+			return false;
+		});
+}
+
+function createTransferStudents(
+	numSophomores,
+	numJuniors,
+	numSeniors,
+	allCourses
+) {
+	const sophomores = Array(numSophomores).fill(generateStudent());
+	const juniors = Array(numJuniors).fill(generateStudent());
+	const seniors = Array(numSeniors).fill(generateStudent());
+
+	const idealFreshmanHistory = [
+		"Alaska History",
+		"English I",
+		"Pre-Algebra",
+		"Science I",
+		"Carpentry",
+		"High School PE",
+	].map((title) =>
+		JSON.parse(
+			JSON.stringify(allCourses.find((course) => course.title === title))
+		)
+	);
+
+	const idealSophomoreHistory = [
+		"World History",
+		"English II",
+		"Algebra I",
+		"Science II",
+		"Welding",
+		"Health",
+	].map((title) =>
+		JSON.parse(
+			JSON.stringify(allCourses.find((course) => course.title === title))
+		)
+	);
+
+	const idealJuniorHistory = [
+		"Government",
+		"English III",
+		"Geometry",
+		"Science III",
+		"Carpentry",
+		"Band",
+	].map((title) =>
+		JSON.parse(
+			JSON.stringify(allCourses.find((course) => course.title === title))
+		)
+	);
+
+	// Handle freshmen history only for sophomores transferring in
+	for (const transferStudent of sophomores) {
+		transferStudent.isTransfer = true;
+		transferStudent.courseHistory["9"] =
+			getTransferHistory(idealFreshmanHistory);
+	}
+	simulateEarnCredits(sophomores);
+	for (const student of sophomores) {
+		student.grade = 10;
+	}
+
+	// Handle freshmen and sophomore history for juniors transferring in
+	for (const transferStudent of juniors) {
+		transferStudent.isTransfer = true;
+		transferStudent.courseHistory["9"] =
+			getTransferHistory(idealFreshmanHistory);
+	}
+	simulateEarnCredits(juniors);
+
+	for (const transferStudent of juniors) {
+		transferStudent.grade = 10;
+		transferStudent.courseHistory["10"] = getTransferHistory(
+			idealSophomoreHistory
+		);
+	}
+	simulateEarnCredits(juniors);
+	for (const student of sophomores) {
+		student.grade = 11;
+	}
+
+	// Handle freshmen, sophomore, and junior history for seniors transferring in
+	for (const transferStudent of seniors) {
+		transferStudent.isTransfer = true;
+		transferStudent.courseHistory["9"] =
+			getTransferHistory(idealFreshmanHistory);
+	}
+	simulateEarnCredits(seniors);
+
+	for (const transferStudent of seniors) {
+		transferStudent.grade = 10;
+		transferStudent.courseHistory["10"] = getTransferHistory(
+			idealSophomoreHistory
+		);
+	}
+	simulateEarnCredits(seniors);
+
+	for (const transferStudent of seniors) {
+		transferStudent.grade = 11;
+		transferStudent.courseHistory["11"] =
+			getTransferHistory(idealJuniorHistory);
+	}
+	simulateEarnCredits(seniors);
+	for (const student of sophomores) {
+		student.grade = 12;
+	}
+
+	return [...sophomores, ...juniors, ...seniors];
 }
 
 function getPrevStudentsAfterAttrition() {
@@ -1784,19 +1906,91 @@ function collectMetrics(newYear) {
 	};
 }
 
-function simulateSchoolYear(rawCourses, rawSchedule) {
+function simulateEarnCredits(students) {
+	for (let i = 0; i < settings.scheduleSystemNum; i++) {
+		for (const student of students) {
+			for (const courseRef of student.courseHistory[student.grade]) {
+				const didPass = courseRef.passRate > Math.random();
+				const creditsEarned = didPass ? settings.creditValue : 0;
+				courseRef.creditsEarned += creditsEarned;
+				const updatedStudentRequirements = assignCredits(
+					courseRef,
+					student.requirements
+				);
+				student.requirements = updatedStudentRequirements;
+			}
+		}
+	}
+}
+
+function updateCourseAndStudentData(year) {
+	for (const student of year.students) {
+		for (const courseRef of student.courseHistory[student.grade]) {
+			if (courseRef.creditsEarned >= settings.minConsiderPass) {
+				const curCourse = year.courses.find(
+					(course) =>
+						course.title === courseRef.title &&
+						course.period === courseRef.period
+				);
+				curCourse.passCount++;
+			}
+		}
+		student.didGraduate = checkDidGraduate(student.requirements);
+		if (!student.didGraduate && student.grade > 12) {
+			student.didDropout = true;
+		}
+	}
+}
+
+function simulateSchoolYear() {
 	// Setup new school year
-	const randNumNewStudents = Math.floor(
+	const randNewFreshmen = Math.floor(
 		Math.random() *
 			(settings.maxIncomingFreshmen - settings.minIncomingFreshmen) +
 			settings.minIncomingFreshmen
 	);
-	const newStudents = createStudents(randNumNewStudents);
+	const randTransferSophomores = Math.floor(
+		Math.random() *
+			(settings.maxIncomingSophomores - settings.minIncomingSophomores) +
+			settings.minIncomingSophomores
+	);
+	const randTransferJuniors = Math.floor(
+		Math.random() *
+			(settings.maxIncomingJuniors - settings.minIncomingJuniors) +
+			settings.minIncomingJuniors
+	);
+	const randTransferSeniors = Math.floor(
+		Math.random() *
+			(settings.maxIncomingSeniors - settings.minIncomingSeniors) +
+			settings.minIncomingSeniors
+	);
+	const newCourses = generateCourses();
+	const prevStudents = getPrevStudentsAfterAttrition();
+	const newStudents = createNewFreshmen(randNewFreshmen);
+	const newTransfers = createTransferStudents(
+		randTransferSophomores,
+		randTransferJuniors,
+		randTransferSeniors,
+		newCourses
+	);
+
+	let curTotalStudents =
+		prevStudents.length + newStudents.length + newTransfers.length;
+	while (curTotalStudents > settings.maxTotalStudents) {
+		const randTransferIndex = Math.floor(Math.random() * newTransfers.length);
+		newTransfers.splice(randTransferIndex, 1);
+		curTotalStudents--;
+	}
+
 	const newYear = {
 		id: generateId(),
 		simYear: allYearsReport.length - settings.scheduleSystemNum + 1,
-		courses: generateCourses(rawCourses, rawSchedule),
-		students: [...getPrevStudentsAfterAttrition(), ...newStudents],
+		courses: newCourses,
+		students: [
+			...getPrevStudentsAfterAttrition(),
+			...newStudents,
+			...newTransfers,
+		],
 		issues: [],
 		metrics: {
 			numFreshmen: null,
@@ -1986,37 +2180,11 @@ function simulateSchoolYear(rawCourses, rawSchedule) {
 	}
 
 	// Simulate earning credits throughout the year
-	for (let i = 0; i < settings.scheduleSystemNum; i++) {
-		for (const student of newYear.students) {
-			for (const courseRef of student.courseHistory[student.grade]) {
-				const didPass = courseRef.passRate > Math.random();
-				courseRef.creditsEarned += didPass ? settings.creditValue : 0;
-				const updatedStudentRequirements = assignCredits(
-					courseRef,
-					student.requirements
-				);
-				student.requirements = updatedStudentRequirements;
-			}
-		}
-	}
+	simulateEarnCredits(newYear.students);
 
 	// Update course pass rates, check for graduates, and collect metrics
-	for (const student of newYear.students) {
-		for (const courseRef of student.courseHistory[student.grade]) {
-			if (courseRef.creditsEarned >= settings.minConsiderPass) {
-				const curCourse = newYear.courses.find(
-					(course) =>
-						course.title === courseRef.title &&
-						course.period === courseRef.period
-				);
-				curCourse.passCount++;
-			}
-		}
-		student.didGraduate = checkDidGraduate(student.requirements);
-		if (!student.didGraduate && student.grade > 12) {
-			student.didDropout = true;
-		}
-	}
+	updateCourseAndStudentData(newYear);
+
 	const newMetrics = collectMetrics(newYear);
 	newYear.metrics = newMetrics;
 	allYearsReport.push(newYear);
